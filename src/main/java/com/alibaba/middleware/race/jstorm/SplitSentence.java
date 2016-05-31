@@ -20,6 +20,7 @@ public class SplitSentence implements IRichBolt {
         for (String word : sentence.split("\\s+")) {
             collector.emit(new Values(word));
         }
+        collector.ack(tuple);
     }
 
     @Override

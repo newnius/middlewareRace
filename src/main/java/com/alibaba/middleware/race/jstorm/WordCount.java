@@ -20,6 +20,7 @@ public class WordCount implements IRichBolt {
         if (count == null)
             count = 0;
         counts.put(word, ++count);
+        collector.ack(tuple);
     }
 
     @Override

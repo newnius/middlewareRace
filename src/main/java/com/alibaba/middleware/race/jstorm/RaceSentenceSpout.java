@@ -6,6 +6,7 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 import com.alibaba.jstorm.utils.JStormUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,7 @@ public class RaceSentenceSpout implements IRichSpout {
     public void nextTuple() {
         int n = sendNumPerNexttuple;
         while (--n >= 0) {
+            Utils.sleep(10);
             String sentence = CHOICES[_rand.nextInt(CHOICES.length)];
             _collector.emit(new Values(sentence));
         }
