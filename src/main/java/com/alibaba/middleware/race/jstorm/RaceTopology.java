@@ -10,15 +10,15 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * ÕâÊÇÒ»¸öºÜ¼òµ¥µÄÀý×Ó
- * Ñ¡ÊÖµÄÍØÆËÌá½»µ½¼¯Èº£¬ÎÒÃÇÊÇÓÐ³¬Ê±ÉèÖÃµÄ¡£Ã¿¸öÑ¡ÊÖµÄÍØÆË×î¶àÅÜ20·ÖÖÓ£¬Ò»µ©³¬¹ýÕâ¸öÊ±¼ä
- * ÎÒÃÇ»á½«Ñ¡ÊÖÍØÆËÉ±µô¡£
+ * è¿™æ˜¯ä¸€ä¸ªå¾ˆç®€å•çš„ä¾‹å­
+ * é€‰æ‰‹çš„æ‹“æ‰‘æäº¤åˆ°é›†ç¾¤ï¼Œæˆ‘ä»¬æ˜¯æœ‰è¶…æ—¶è®¾ç½®çš„ã€‚æ¯ä¸ªé€‰æ‰‹çš„æ‹“æ‰‘æœ€å¤šè·‘20åˆ†é’Ÿï¼Œä¸€æ—¦è¶…è¿‡è¿™ä¸ªæ—¶é—´
+ * æˆ‘ä»¬ä¼šå°†é€‰æ‰‹æ‹“æ‰‘æ€æŽ‰ã€‚
  */
 
 /**
- * Ñ¡ÊÖÍØÆËÈë¿ÚÀà£¬ÎÒÃÇ¶¨Òå±ØÐëÊÇcom.alibaba.middleware.race.jstorm.RaceTopology
- * ÒòÎªÎÒÃÇºóÌ¨¶ÔÑ¡ÊÖµÄgit½øÐÐÏÂÔØ´ò°ü£¬ÍØÆËÔËÐÐµÄÈë¿ÚÀàÄ¬ÈÏÊÇcom.alibaba.middleware.race.jstorm.RaceTopology£»
- * ËùÒÔÕâ¸öÖ÷ÀàÂ·¾¶Ò»¶¨ÒªÕýÈ·
+ * é€‰æ‰‹æ‹“æ‰‘å…¥å£ç±»ï¼Œæˆ‘ä»¬å®šä¹‰å¿…é¡»æ˜¯com.alibaba.middleware.race.jstorm.RaceTopology
+ * å› ä¸ºæˆ‘ä»¬åŽå°å¯¹é€‰æ‰‹çš„gitè¿›è¡Œä¸‹è½½æ‰“åŒ…ï¼Œæ‹“æ‰‘è¿è¡Œçš„å…¥å£ç±»é»˜è®¤æ˜¯com.alibaba.middleware.race.jstorm.RaceTopologyï¼›
+ * æ‰€ä»¥è¿™ä¸ªä¸»ç±»è·¯å¾„ä¸€å®šè¦æ­£ç¡®
  */
 public class RaceTopology {
 

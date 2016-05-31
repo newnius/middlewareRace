@@ -15,11 +15,11 @@ import java.util.List;
 
 
 /**
- * Consumer£¬¶©ÔÄÏûÏ¢
+ * Consumerï¼Œè®¢é˜…æ¶ˆæ¯
  */
 
 /**
- * RocketMqÏû·Ñ×éĞÅÏ¢ÎÒÃÇ¶¼»áÔÙÕıÊ½Ìá½»´úÂëÇ°¸æÖªÑ¡ÊÖ
+ * RocketMqæ¶ˆè´¹ç»„ä¿¡æ¯æˆ‘ä»¬éƒ½ä¼šå†æ­£å¼æäº¤ä»£ç å‰å‘ŠçŸ¥é€‰æ‰‹
  */
 public class Consumer {
 
@@ -27,12 +27,12 @@ public class Consumer {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("please_rename_unique_group_name_4");
 
         /**
-         * ÉèÖÃConsumerµÚÒ»´ÎÆô¶¯ÊÇ´Ó¶ÓÁĞÍ·²¿¿ªÊ¼Ïû·Ñ»¹ÊÇ¶ÓÁĞÎ²²¿¿ªÊ¼Ïû·Ñ<br>
-         * Èç¹û·ÇµÚÒ»´ÎÆô¶¯£¬ÄÇÃ´°´ÕÕÉÏ´ÎÏû·ÑµÄÎ»ÖÃ¼ÌĞøÏû·Ñ
+         * è®¾ç½®Consumerç¬¬ä¸€æ¬¡å¯åŠ¨æ˜¯ä»é˜Ÿåˆ—å¤´éƒ¨å¼€å§‹æ¶ˆè´¹è¿˜æ˜¯é˜Ÿåˆ—å°¾éƒ¨å¼€å§‹æ¶ˆè´¹<br>
+         * å¦‚æœéç¬¬ä¸€æ¬¡å¯åŠ¨ï¼Œé‚£ä¹ˆæŒ‰ç…§ä¸Šæ¬¡æ¶ˆè´¹çš„ä½ç½®ç»§ç»­æ¶ˆè´¹
          */
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
-        //ÔÚ±¾µØ´î½¨ºÃbrokerºó,¼ÇµÃÖ¸¶¨nameServerµÄµØÖ·
+        //åœ¨æœ¬åœ°æ­å»ºå¥½brokerå,è®°å¾—æŒ‡å®šnameServerçš„åœ°å€
         //consumer.setNamesrvAddr("127.0.0.1:9876");
 
         consumer.subscribe(RaceConfig.MqPayTopic, "*");
@@ -46,7 +46,7 @@ public class Consumer {
 
                     byte [] body = msg.getBody();
                     if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-                        //Info: Éú²úÕßÍ£Ö¹Éú³ÉÊı¾İ, ²¢²»ÒâÎ¶×ÅÂíÉÏ½áÊø
+                        //Info: ç”Ÿäº§è€…åœæ­¢ç”Ÿæˆæ•°æ®, å¹¶ä¸æ„å‘³ç€é©¬ä¸Šç»“æŸ
                         System.out.println("Got the end signal");
                         continue;
                     }

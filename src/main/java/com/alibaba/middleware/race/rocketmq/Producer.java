@@ -16,7 +16,7 @@ import java.util.concurrent.Semaphore;
 
 
 /**
- * Producer£¬·¢ËÍÏûÏ¢
+ * Producerï¼Œå‘é€æ¶ˆæ¯
  */
 public class Producer {
 
@@ -24,8 +24,8 @@ public class Producer {
     private static int count = 1000;
 
     /**
-     * ÕâÊÇÒ»¸öÄ£Äâ¶Ñ»ıÏûÏ¢µÄ³ÌĞò£¬Éú³ÉµÄÏûÏ¢Ä£ĞÍºÍÎÒÃÇ±ÈÈüµÄÏûÏ¢Ä£ĞÍÊÇÒ»ÑùµÄ£¬
-     * ËùÒÔÑ¡ÊÖ¿ÉÒÔÀûÓÃÕâ¸ö³ÌĞòÉú³ÉÊı¾İ£¬×öÏßÏÂµÄ²âÊÔ¡£
+     * è¿™æ˜¯ä¸€ä¸ªæ¨¡æ‹Ÿå †ç§¯æ¶ˆæ¯çš„ç¨‹åºï¼Œç”Ÿæˆçš„æ¶ˆæ¯æ¨¡å‹å’Œæˆ‘ä»¬æ¯”èµ›çš„æ¶ˆæ¯æ¨¡å‹æ˜¯ä¸€æ ·çš„ï¼Œ
+     * æ‰€ä»¥é€‰æ‰‹å¯ä»¥åˆ©ç”¨è¿™ä¸ªç¨‹åºç”Ÿæˆæ•°æ®ï¼Œåšçº¿ä¸‹çš„æµ‹è¯•ã€‚
      * @param args
      * @throws MQClientException
      * @throws InterruptedException
@@ -33,7 +33,7 @@ public class Producer {
     public static void main(String[] args) throws MQClientException, InterruptedException {
         DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
 
-        //ÔÚ±¾µØ´î½¨ºÃbrokerºó,¼ÇµÃÖ¸¶¨nameServerµÄµØÖ·
+        //åœ¨æœ¬åœ°æ­å»ºå¥½brokerå,è®°å¾—æŒ‡å®šnameServerçš„åœ°å€
         //producer.setNamesrvAddr("127.0.0.1:9876");
 
         producer.start();
@@ -99,7 +99,7 @@ public class Producer {
 
         semaphore.acquire(count);
 
-        //ÓÃÒ»¸öshort±êÊ¶Éú²úÕßÍ£Ö¹Éú²úÊı¾İ
+        //ç”¨ä¸€ä¸ªshortæ ‡è¯†ç”Ÿäº§è€…åœæ­¢ç”Ÿäº§æ•°æ®
         byte [] zero = new  byte[]{0,0};
         Message endMsgTB = new Message(RaceConfig.MqTaobaoTradeTopic, zero);
         Message endMsgTM = new Message(RaceConfig.MqTmallTradeTopic, zero);
