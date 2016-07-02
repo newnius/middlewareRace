@@ -27,6 +27,18 @@ public class OrderMessage implements Serializable{
     private OrderMessage() {
 
     }
+    
+    
+
+	public OrderMessage(long orderId, long createTime, double totalPrice, int platform) {
+		super();
+		this.orderId = orderId;
+		this.createTime = createTime;
+		this.totalPrice = totalPrice;
+		this.platform = platform;
+	}
+
+
 
 	@Override
     public String toString() {
