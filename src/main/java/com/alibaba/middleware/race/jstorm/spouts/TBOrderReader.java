@@ -42,7 +42,8 @@ public class TBOrderReader implements IRichSpout {
 		orderMessages = new LinkedBlockingQueue<>();
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-		// consumer.setNamesrvAddr("127.0.0.1:9876");
+		//
+		 //consumer.setNamesrvAddr("192.168.56.104:9876");
 		try {
 			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
 		} catch (MQClientException e1) {
@@ -60,8 +61,8 @@ public class TBOrderReader implements IRichSpout {
 						// Info: 生产者停止生成数据, 并不意味着马上结束
 						LOG.info("Got the end signal of TBOrderMessage");
 						try {
-							orderMessages.put(null);
-						} catch (InterruptedException e) {
+							//orderMessages.put(null);
+						} catch (Exception e) {
 							e.printStackTrace();
 						}
 						continue;
