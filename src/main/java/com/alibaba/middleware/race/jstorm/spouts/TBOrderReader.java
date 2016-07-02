@@ -46,9 +46,9 @@ public class TBOrderReader implements IRichSpout {
 		 //consumer.setNamesrvAddr("192.168.56.104:9876");
 		try {
 			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
-		} catch (MQClientException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (MQClientException ex) {
+			ex.printStackTrace();
+			LOG.error(ex.getErrorMessage());
 		}
 		consumer.registerMessageListener(new MessageListenerConcurrently() {
 
@@ -64,6 +64,7 @@ public class TBOrderReader implements IRichSpout {
 							//orderMessages.put(null);
 						} catch (Exception e) {
 							e.printStackTrace();
+							LOG.error(e.getMessage());
 						}
 						continue;
 					}
@@ -73,8 +74,8 @@ public class TBOrderReader implements IRichSpout {
 					try {
 						orderMessages.put(orderMessage);
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
+						LOG.error(e.getMessage());
 					}
 				}
 				return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
@@ -85,6 +86,7 @@ public class TBOrderReader implements IRichSpout {
 			consumer.start();
 		} catch (MQClientException e) {
 			e.printStackTrace();
+			LOG.error(e.getErrorMessage());
 		}
 
 	}
@@ -99,6 +101,7 @@ public class TBOrderReader implements IRichSpout {
 				_collector.emit(new Values(RaceUtils.toMinuteTimestamp(orderMessage.getOrderId()), orderMessage));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
+				LOG.error(e.getMessage());
 			}
 
 		}
@@ -121,25 +124,21 @@ public class TBOrderReader implements IRichSpout {
 
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void activate() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void deactivate() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public Map<String, Object> getComponentConfiguration() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

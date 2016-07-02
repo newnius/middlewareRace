@@ -7,11 +7,9 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
-import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.OrderMessage;
-import com.alibaba.middleware.race.model.PaymentMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -23,10 +21,8 @@ import com.alibaba.rocketmq.common.message.MessageExt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class TMOrderReader implements IRichSpout {
@@ -74,6 +70,7 @@ public class TMOrderReader implements IRichSpout {
 
 					OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
 					System.out.println(orderMessage);
+					
 					try {
 						orderMessages.put(orderMessage);
 					} catch (InterruptedException e) {
