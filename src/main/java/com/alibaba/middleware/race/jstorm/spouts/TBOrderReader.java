@@ -8,6 +8,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
+import com.alibaba.middleware.race.jstorm.RaceTopology;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -93,6 +94,15 @@ public class TBOrderReader implements IRichSpout {
 
 	@Override
 	public void nextTuple() {
+		
+    	java.util.logging.Logger logger = java.util.logging.Logger.getLogger(RaceTopology.class.getName());
+    	logger.warning("This is java.util.logging.Logger");
+    	LOG.warn("This is org.apache.log4j.Logger");
+    	
+    	Logger log = LoggerFactory.getLogger(RaceTopology.class);
+    	log.warn("This is org.slf4j.Logger");
+    	
+    	System.out.println("THis it sysout");
 		
 		while (1 > 0) {
 			//Utils.sleep(10);

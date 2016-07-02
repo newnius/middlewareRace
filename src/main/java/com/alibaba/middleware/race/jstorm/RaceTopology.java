@@ -4,12 +4,13 @@ import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolts.TBOrderSaver;
 import com.alibaba.middleware.race.jstorm.spouts.TBOrderReader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -25,13 +26,21 @@ import org.slf4j.LoggerFactory;
  */
 public class RaceTopology {
 
-    private static Logger LOG = LoggerFactory.getLogger(RaceTopology.class);
-
+    private static org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(RaceTopology.class);
 
     public static void main(String[] args) throws Exception {
-
-    	LOG.info("successfully call main");
     	
+    	
+    	java.util.logging.Logger logger = java.util.logging.Logger.getLogger(RaceTopology.class.getName());
+    	logger.warning("This is java.util.logging.Logger");
+    	LOG.warn("This is org.apache.log4j.Logger");
+    	
+    	Logger log = LoggerFactory.getLogger(RaceTopology.class);
+    	log.warn("This is org.slf4j.Logger");
+    	
+    	System.out.println("THis it sysout");
+    	
+    	LOG.info("successfully call main");
         Config conf = new Config();
         int spout_Parallelism_hint = 1;
         int split_Parallelism_hint = 2;
