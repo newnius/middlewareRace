@@ -23,28 +23,7 @@ public class OrderMessage implements Serializable{
 
     }
 
-    public static OrderMessage createTbaoMessage() {
-        OrderMessage msg =  new OrderMessage();
-        msg.orderId = TableItemFactory.createOrderId();
-        msg.buyerId = TableItemFactory.createBuyerId();
-        msg.productId = TableItemFactory.createProductId();
-        msg.salerId = TableItemFactory.createTbaoSalerId();
-        msg.totalPrice = TableItemFactory.createTotalPrice();
-        return msg;
-    }
-
-    public static OrderMessage createTmallMessage() {
-        OrderMessage msg =  new OrderMessage();
-        msg.orderId = TableItemFactory.createOrderId();
-        msg.buyerId = TableItemFactory.createBuyerId();
-        msg.productId = TableItemFactory.createProductId();
-        msg.salerId = TableItemFactory.createTmallSalerId();
-        msg.totalPrice = TableItemFactory.createTotalPrice();
-
-        return msg;
-    }
-
-    @Override
+	@Override
     public String toString() {
         return "OrderMessage{" +
                 "orderId=" + orderId +
