@@ -120,7 +120,7 @@ public class TMOrderReader implements IRichSpout {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("TMOrder"));
+		declarer.declare(new Fields("order"));
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-
+/*
 package com.alibaba.middleware.race.rocketmq;
 
 import com.alibaba.middleware.race.RaceConfig;
@@ -15,21 +15,21 @@ import java.util.Random;
 import java.util.concurrent.Semaphore;
 
 
-/**
+*//**
  * Producer，发送消息
- */
+ *//*
 public class Producer {
 
     private static Random rand = new Random();
     private static int count = 1000;
 
-    /**
+    *//**
      * 这是一个模拟堆积消息的程序，生成的消息模型和我们比赛的消息模型是一样的，
      * 所以选手可以利用这个程序生成数据，做线下的测试。
      * @param args
      * @throws MQClientException
      * @throws InterruptedException
-     */
+     *//*
     public static void main(String[] args) throws MQClientException, InterruptedException {
         DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
 
@@ -115,3 +115,4 @@ public class Producer {
         producer.shutdown();
     }
 }
+*/
