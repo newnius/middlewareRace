@@ -33,6 +33,10 @@ public class PaymentMessage implements Serializable{
      * 1，无线
      */
     private short payPlatform; //支付平台
+    
+    
+    public static final int PC = 0;
+    public static final int MOBILE = 1;
 
     /**
      * 付款记录创建时间

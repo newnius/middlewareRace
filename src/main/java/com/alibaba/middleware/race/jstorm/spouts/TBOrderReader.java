@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class TBOrderReader implements IRichSpout {
@@ -44,44 +45,47 @@ public class TBOrderReader implements IRichSpout {
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 		//
-		 //consumer.setNamesrvAddr("192.168.56.104:9876");
+		// consumer.setNamesrvAddr("192.168.56.104:9876");
 		try {
 			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
 		} catch (MQClientException ex) {
 			ex.printStackTrace();
 			LOG.error(ex.getErrorMessage());
 		}
-		consumer.registerMessageListener(new MessageListenerConcurrently() {
-
-			@Override
-			public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-				for (MessageExt msg : msgs) {
-
-					byte[] body = msg.getBody();
-					if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-						// Info: 生产者停止生成数据, 并不意味着马上结束
-						LOG.info("Got the end signal of TBOrderMessage");
-						try {
-							//orderMessages.put(null);
-						} catch (Exception e) {
-							e.printStackTrace();
-							LOG.error(e.getMessage());
-						}
-						continue;
-					}
-
-					OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-					LOG.info(orderMessage.toString());
-					try {
-						orderMessages.put(orderMessage);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-						LOG.error(e.getMessage());
-					}
-				}
-				return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
-			}
-		});
+		//
+		// consumer.registerMessageListener(new MessageListenerConcurrently() {
+		//
+		// @Override
+		// public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt>
+		// msgs, ConsumeConcurrentlyContext context) {
+		// for (MessageExt msg : msgs) {
+		//
+		// byte[] body = msg.getBody();
+		// if (body.length == 2 && body[0] == 0 && body[1] == 0) {
+		// // Info: 生产者停止生成数据, 并不意味着马上结束
+		// LOG.info("Got the end signal of TBOrderMessage");
+		// try {
+		// //orderMessages.put(null);
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// LOG.error(e.getMessage());
+		// }
+		// continue;
+		// }
+		//
+		// OrderMessage orderMessage =
+		// RaceUtils.readKryoObject(OrderMessage.class, body);
+		// LOG.info(orderMessage.toString());
+		// try {
+		// orderMessages.put(orderMessage);
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// LOG.error(e.getMessage());
+		// }
+		// }
+		// return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+		// }
+		// });
 
 		try {
 			consumer.start();
@@ -94,18 +98,24 @@ public class TBOrderReader implements IRichSpout {
 
 	@Override
 	public void nextTuple() {
-		
-    	java.util.logging.Logger logger = java.util.logging.Logger.getLogger(RaceTopology.class.getName());
-    	logger.warning("This is java.util.logging.Logger");
-    	LOG.warn("This is org.apache.log4j.Logger");
-    	
-    	Logger log = LoggerFactory.getLogger(RaceTopology.class);
-    	log.warn("This is org.slf4j.Logger");
-    	
-    	System.out.println("THis it sysout");
-		
+
+		OrderMessage order = new OrderMessage(new Random().nextLong(), System.currentTimeMillis(),
+				new Random().nextLong(), new Random().nextInt() % 2);
+		_collector.emit(new Values(RaceUtils.toMinuteTimestamp(order.getOrderId()), order));
+		if (1 > 0)
+			return;
+
+		java.util.logging.Logger logger = java.util.logging.Logger.getLogger(RaceTopology.class.getName());
+		logger.warning("This is java.util.logging.Logger");
+		LOG.warn("This is org.apache.log4j.Logger");
+
+		Logger log = LoggerFactory.getLogger(RaceTopology.class);
+		log.warn("This is org.slf4j.Logger");
+
+		System.out.println("THis it sysout");
+
 		while (1 > 0) {
-			//Utils.sleep(10);
+			// Utils.sleep(10);
 			try {
 				OrderMessage orderMessage = orderMessages.take();
 				_collector.emit(new Values(RaceUtils.toMinuteTimestamp(orderMessage.getOrderId()), orderMessage));
