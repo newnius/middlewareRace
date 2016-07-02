@@ -16,6 +16,11 @@ public class OrderMessage implements Serializable{
     private String salerId; //卖家ID
     private long createTime; //13位数数，毫秒级时间戳，订单创建时间
     private double totalPrice;
+    
+    private int platform;
+    
+    public static final int TAOBAO = 0;
+    public static final int TMALL = 1;
 
 
     //Kryo默认需要无参数构造函数
@@ -32,6 +37,7 @@ public class OrderMessage implements Serializable{
                 ", salerId='" + salerId + '\'' +
                 ", createTime=" + createTime +
                 ", totalPrice=" + totalPrice +
+                ", platform="+ platform +
                 '}';
     }
 
@@ -84,5 +90,15 @@ public class OrderMessage implements Serializable{
     public void setCreateTime(long createTime) {
         this.createTime = createTime;
     }
+
+	public int getPlatform() {
+		return platform;
+	}
+
+	public void setPlatform(int platform) {
+		this.platform = platform;
+	}
+    
+    
 
 }

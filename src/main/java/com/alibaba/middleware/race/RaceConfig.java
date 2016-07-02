@@ -12,6 +12,8 @@ public class RaceConfig implements Serializable {
     public static String prex_tmall = "platformTmall_";
     public static String prex_taobao = "platformTaobao_";
     public static String prex_ratio = "ratio_";
+    
+    public static String prex_order = "order_";
 
 
     //这些jstorm/rocketMq/tair 的集群配置信息，这些配置信息在正式提交代码前会被公布

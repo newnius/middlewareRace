@@ -30,5 +30,10 @@ public class RaceUtils {
         T ret = kryo.readObject(input, tClass);
         return ret;
     }
+    
+    public static long toMinuteTimestamp(Long millisTime){
+    	Long minuteTime = (millisTime / 1000 / 60) * 60;
+    	return minuteTime;
+    }
 
 }

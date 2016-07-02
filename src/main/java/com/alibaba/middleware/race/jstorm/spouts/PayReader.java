@@ -6,9 +6,12 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
+
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.OrderMessage;
+import com.alibaba.middleware.race.model.PaymentMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -24,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class TBOrderReader implements IRichSpout {
+public class PayReader implements IRichSpout {
 	/**
 	 * 
 	 */
@@ -32,7 +35,7 @@ public class TBOrderReader implements IRichSpout {
 	private DefaultMQPushConsumer consumer;
 	private LinkedBlockingQueue<OrderMessage> orderMessages;
 
-	private static Logger LOG = LoggerFactory.getLogger(TBOrderReader.class);
+	private static Logger LOG = LoggerFactory.getLogger(PayReader.class);
 	private SpoutOutputCollector _collector;
 
 	@SuppressWarnings("rawtypes")
@@ -44,7 +47,7 @@ public class TBOrderReader implements IRichSpout {
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 		// consumer.setNamesrvAddr("127.0.0.1:9876");
 		try {
-			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
+			consumer.subscribe(RaceConfig.MqPayTopic, "*");
 		} catch (MQClientException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -58,23 +61,18 @@ public class TBOrderReader implements IRichSpout {
 					byte[] body = msg.getBody();
 					if (body.length == 2 && body[0] == 0 && body[1] == 0) {
 						// Info: 生产者停止生成数据, 并不意味着马上结束
-						LOG.info("Got the end signal of TBOrderMessage");
+						LOG.info("Got the end signal of PayOrderMessage");
 						try {
-							orderMessages.put(null);
-						} catch (InterruptedException e) {
+							//orderMessages.put(null);
+						} catch (Exception e) {
 							e.printStackTrace();
 						}
 						continue;
 					}
 
-					OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-					LOG.info(orderMessage.toString());
-					try {
-						orderMessages.put(orderMessage);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
+					LOG.info(paymentMessage.toString());
+					
 				}
 				return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
 			}
@@ -115,7 +113,7 @@ public class TBOrderReader implements IRichSpout {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("createTime", "order"));
+		declarer.declare(new Fields("minuteTime", "payment"));
 	}
 
 	@Override
