@@ -3,13 +3,16 @@ package com.alibaba.middleware.race.jstorm;
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import backtype.storm.tuple.Fields;
 
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.jstorm.bolts.Counter;
+import com.alibaba.middleware.race.jstorm.bolts.OrderGetter;
 import com.alibaba.middleware.race.jstorm.bolts.OrderSaver;
+import com.alibaba.middleware.race.jstorm.bolts.ResultWriter;
+import com.alibaba.middleware.race.jstorm.spouts.PayReader;
 import com.alibaba.middleware.race.jstorm.spouts.TBOrderReader;
+import com.alibaba.middleware.race.jstorm.spouts.TMOrderReader;
 
 
 
@@ -26,39 +29,30 @@ import com.alibaba.middleware.race.jstorm.spouts.TBOrderReader;
  */
 public class RaceTopology {
 
-    private static org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(RaceTopology.class);
-
     public static void main(String[] args) throws Exception {
-    	
-    	
-    	java.util.logging.Logger logger = java.util.logging.Logger.getLogger(RaceTopology.class.getName());
-    	logger.warning("This is java.util.logging.Logger");
-    	LOG.warn("This is org.apache.log4j.Logger");
-    	
-    	Logger log = LoggerFactory.getLogger(RaceTopology.class);
-    	log.warn("This is org.slf4j.Logger");
-    	
-    	System.out.println("THis it sysout");
-    	
-    	LOG.info("successfully call main");
         Config conf = new Config();
         int spout_Parallelism_hint = 1;
-        int split_Parallelism_hint = 2;
-        //int count_Parallelism_hint = 2;
+        int order_saver_Parallelism_hint = 2;
+        int order_getter_Parallelism_hint = 2;
+        int count_Parallelism_hint = 2;
+        int tair_write_Parallelism_hint = 1;
 
         TopologyBuilder builder = new TopologyBuilder();
 
         builder.setSpout("order-spout", new TBOrderReader(), spout_Parallelism_hint);
-        builder.setBolt("order-saver", new OrderSaver(), split_Parallelism_hint).shuffleGrouping("order-spout");
+        //builder.setSpout("order-spout", new TMOrderReader(), spout_Parallelism_hint);
+        //builder.setSpout("payment-spout", new PayReader(), spout_Parallelism_hint);
         
-        //builder.setBolt("tb-count", new TBCounter(), split_Parallelism_hint).shuffleGrouping("tb-spout");
-        //builder.setBolt("count", new WordCount(), count_Parallelism_hint).fieldsGrouping("split", new Fields("word"));
+        builder.setBolt("order-saver", new OrderSaver(), order_saver_Parallelism_hint).shuffleGrouping("order-spout");
+        //builder.setBolt("order-getter", new OrderGetter(), order_getter_Parallelism_hint).shuffleGrouping("paymeny-spout");
+        
+        //builder.setBolt("result", new Counter(), count_Parallelism_hint).fieldsGrouping("order-getter", new Fields("minuteTime"));
+        //builder.setBolt("result-writer", new ResultWriter(), tair_write_Parallelism_hint).shuffleGrouping("result");
         String topologyName = RaceConfig.JstormTopologyName;
 
         try {
             StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

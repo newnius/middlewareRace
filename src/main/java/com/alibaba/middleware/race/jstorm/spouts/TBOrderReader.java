@@ -43,7 +43,7 @@ public class TBOrderReader implements IRichSpout {
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 		//
-		if(RaceConfig.RocketMqAddr.length()>0)
+		if (RaceConfig.RocketMqAddr.length() > 0)
 			consumer.setNamesrvAddr(RaceConfig.RocketMqAddr);
 		try {
 			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
@@ -77,10 +77,15 @@ public class TBOrderReader implements IRichSpout {
 					LOG.info(msg.getTopic());
 					if (msg.getTopic().equals(RaceConfig.MqTaobaoTradeTopic)) {
 						LOG.info("This is tb order");
+						LOG.info(new String(body));
 						OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
+						orderMessage.setPlatform(OrderMessage.TAOBAO);
+						LOG.info("end of parse");
+						LOG.info("OrderId:" + orderMessage.getOrderId());
 						LOG.info(orderMessage.toString());
 						try {
 							orderMessages.put(orderMessage);
+							LOG.info("Total orders : " + orderMessages.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -102,14 +107,14 @@ public class TBOrderReader implements IRichSpout {
 
 	@Override
 	public void nextTuple() {
+		LOG.info("Total orders : " + orderMessages.size());
 
-		while (1 > 0) {
-			// Utils.sleep(10);
-			OrderMessage orderMessage = orderMessages.poll();
-			if (orderMessage == null)
-				return;
-			_collector.emit(new Values(orderMessage));
-		}
+		OrderMessage orderMessage = null;
+		do {
+			orderMessage = orderMessages.poll();
+			if (orderMessage != null)
+				_collector.emit(new Values(orderMessage));
+		} while (orderMessage != null);
 	}
 
 	@Override
