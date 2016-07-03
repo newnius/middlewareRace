@@ -1,7 +1,11 @@
 package com.alibaba.middleware.race.Tair;
 
 import com.alibaba.middleware.race.RaceConfig;
+import com.taobao.tair.impl.DefaultTairManager;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -9,11 +13,29 @@ import java.io.Serializable;
  * group 、namespace我们都会在正式提交代码前告知选手
  */
 public class TairOperatorImpl {
+	
+	
+	
 
     public TairOperatorImpl(String masterConfigServer,
                             String slaveConfigServer,
                             String groupName,
                             int namespace) {
+        // 创建config server列表  
+        List<String> confServers = new ArrayList<String>();  
+        confServers.add(masterConfigServer);   
+        confServers.add(slaveConfigServer); // 可选  
+  
+        // 创建客户端实例  
+        DefaultTairManager tairManager = new DefaultTairManager();  
+        tairManager.setConfigServerList(confServers);  
+  
+        // 设置组名  
+        tairManager.setGroupName(groupName);  
+        // 初始化客户端  
+        tairManager.init();
+    	
+    	
     }
 
     public boolean write(Serializable key, Serializable value) {

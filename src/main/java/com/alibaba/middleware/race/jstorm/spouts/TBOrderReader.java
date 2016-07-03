@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class TBOrderReader implements IRichSpout {
@@ -76,6 +75,7 @@ public class TBOrderReader implements IRichSpout {
 
 					LOG.info(msg.getTopic());
 					if (msg.getTopic().equals(RaceConfig.MqTaobaoTradeTopic)) {
+						LOG.info("This is tb order");
 						OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
 						LOG.info(orderMessage.toString());
 						try {
@@ -107,23 +107,24 @@ public class TBOrderReader implements IRichSpout {
 			OrderMessage orderMessage = orderMessages.poll();
 			if (orderMessage == null)
 				return;
-			_collector.emit(new Values(RaceUtils.toMinuteTimestamp(orderMessage.getOrderId()), orderMessage));
+			_collector.emit(new Values(orderMessage));
 		}
 	}
 
 	@Override
 	public void ack(Object id) {
-		// Ignored
+		LOG.info("ack " + id);
 	}
 
 	@Override
 	public void fail(Object id) {
+		LOG.info("fail " + id);
 		_collector.emit(new Values(id), id);
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("createTime", "order"));
+		declarer.declare(new Fields("order"));
 	}
 
 	@Override
