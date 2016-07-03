@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.jstorm.bolts.TBOrderSaver;
+import com.alibaba.middleware.race.jstorm.bolts.OrderSaver;
 import com.alibaba.middleware.race.jstorm.spouts.TBOrderReader;
 
 
@@ -48,8 +48,9 @@ public class RaceTopology {
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        builder.setSpout("tb-order-spout", new TBOrderReader(), spout_Parallelism_hint);
-        builder.setBolt("tb-order-saver", new TBOrderSaver(), split_Parallelism_hint).shuffleGrouping("tb-order-spout");
+        builder.setSpout("order-spout", new TBOrderReader(), spout_Parallelism_hint);
+        builder.setBolt("order-saver", new OrderSaver(), split_Parallelism_hint).shuffleGrouping("order-spout");
+        
         //builder.setBolt("tb-count", new TBCounter(), split_Parallelism_hint).shuffleGrouping("tb-spout");
         //builder.setBolt("count", new WordCount(), count_Parallelism_hint).fieldsGrouping("split", new Fields("word"));
         String topologyName = RaceConfig.JstormTopologyName;

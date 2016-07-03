@@ -8,7 +8,6 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
-import com.alibaba.middleware.race.jstorm.RaceTopology;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -52,40 +51,39 @@ public class TBOrderReader implements IRichSpout {
 			ex.printStackTrace();
 			LOG.error(ex.getErrorMessage());
 		}
-		//
-		// consumer.registerMessageListener(new MessageListenerConcurrently() {
-		//
-		// @Override
-		// public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt>
-		// msgs, ConsumeConcurrentlyContext context) {
-		// for (MessageExt msg : msgs) {
-		//
-		// byte[] body = msg.getBody();
-		// if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-		// // Info: 生产者停止生成数据, 并不意味着马上结束
-		// LOG.info("Got the end signal of TBOrderMessage");
-		// try {
-		// //orderMessages.put(null);
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// LOG.error(e.getMessage());
-		// }
-		// continue;
-		// }
-		//
-		// OrderMessage orderMessage =
-		// RaceUtils.readKryoObject(OrderMessage.class, body);
-		// LOG.info(orderMessage.toString());
-		// try {
-		// orderMessages.put(orderMessage);
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// LOG.error(e.getMessage());
-		// }
-		// }
-		// return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
-		// }
-		// });
+
+		consumer.registerMessageListener(new MessageListenerConcurrently() {
+
+			@Override
+			public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
+				LOG.info("registerMessageListener called.");
+				for (MessageExt msg : msgs) {
+
+					byte[] body = msg.getBody();
+					if (body.length == 2 && body[0] == 0 && body[1] == 0) {
+						// Info: 生产者停止生成数据, 并不意味着马上结束
+						LOG.info("Got the end signal of TBOrderMessage");
+						try {
+							// orderMessages.put(null);
+						} catch (Exception e) {
+							e.printStackTrace();
+							LOG.error(e.getMessage());
+						}
+						continue;
+					}
+
+					OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
+					LOG.info(orderMessage.toString());
+					try {
+						orderMessages.put(orderMessage);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						LOG.error(e.getMessage());
+					}
+				}
+				return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+			}
+		});
 
 		try {
 			consumer.start();
@@ -102,18 +100,10 @@ public class TBOrderReader implements IRichSpout {
 		OrderMessage order = new OrderMessage(new Random().nextLong(), System.currentTimeMillis(),
 				new Random().nextLong(), new Random().nextInt() % 2);
 		_collector.emit(new Values(RaceUtils.toMinuteTimestamp(order.getOrderId()), order));
-		if (1 > 0)
+
+		if(1>0)
 			return;
-
-		java.util.logging.Logger logger = java.util.logging.Logger.getLogger(RaceTopology.class.getName());
-		logger.warning("This is java.util.logging.Logger");
-		LOG.warn("This is org.apache.log4j.Logger");
-
-		Logger log = LoggerFactory.getLogger(RaceTopology.class);
-		log.warn("This is org.slf4j.Logger");
-
-		System.out.println("THis it sysout");
-
+		
 		while (1 > 0) {
 			// Utils.sleep(10);
 			try {

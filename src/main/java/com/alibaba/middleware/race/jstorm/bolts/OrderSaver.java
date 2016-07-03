@@ -15,13 +15,13 @@ import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 
-public class TBOrderSaver implements IRichBolt{
+public class OrderSaver implements IRichBolt{
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -6290957298762116810L;
-	private static Logger logger = LoggerFactory.getLogger(TBOrderSaver.class);
+	private static Logger logger = LoggerFactory.getLogger(OrderSaver.class);
 	private OutputCollector collector;
 	
 	@SuppressWarnings("rawtypes")

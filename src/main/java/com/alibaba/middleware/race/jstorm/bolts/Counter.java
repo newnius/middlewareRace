@@ -89,7 +89,7 @@ public class Counter implements IRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields(""));
+		declarer.declare(new Fields("key", "value"));
 	}
 
 	@Override
