@@ -105,6 +105,8 @@ public class TBOrderReader implements IRichSpout {
 		while (1 > 0) {
 			// Utils.sleep(10);
 			OrderMessage orderMessage = orderMessages.poll();
+			if (orderMessage == null)
+				return;
 			_collector.emit(new Values(RaceUtils.toMinuteTimestamp(orderMessage.getOrderId()), orderMessage));
 		}
 	}
