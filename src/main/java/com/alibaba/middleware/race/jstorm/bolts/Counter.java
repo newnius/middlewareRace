@@ -94,7 +94,7 @@ public class Counter implements IRichBolt {
 			}
 		}
 		for (Long minuteTime : toBeDelete) {
-			TBcounters.remove(minuteTime);
+			//TBcounters.remove(minuteTime);
 		}
 
 		minuteTimes = TMcounters.keySet();
@@ -106,7 +106,7 @@ public class Counter implements IRichBolt {
 			}
 		}
 		for (Long minuteTime : toBeDelete) {
-			TMcounters.remove(minuteTime);
+			//TMcounters.remove(minuteTime);
 		}
 		collector.ack(tuple);
 	}

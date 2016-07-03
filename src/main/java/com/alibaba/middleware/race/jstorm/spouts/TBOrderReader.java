@@ -6,6 +6,8 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
+
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.Order;
@@ -78,7 +80,6 @@ public class TBOrderReader implements IRichSpout {
 					LOG.info(msg.getTopic());
 					if (msg.getTopic().equals(RaceConfig.MqTaobaoTradeTopic)) {
 						LOG.info("This is tb order");
-						LOG.info(new String(body));
 						OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
 						Order order = new Order(orderMessage);
 						order.setPlatform(Order.TAOBAO);
@@ -87,7 +88,7 @@ public class TBOrderReader implements IRichSpout {
 						LOG.info(order.toString());
 						try {
 							orders.put(order);
-							LOG.info("Total orders : " + orders.size());
+							LOG.info("after put, Total orders : " + orders.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -109,13 +110,16 @@ public class TBOrderReader implements IRichSpout {
 
 	@Override
 	public void nextTuple() {
-		LOG.info("nextTuple(), Total orders : " + orders.size());
+		LOG.info("before get, Total orders : " + orders.size());
 
 		Order order = null;
 		do {
 			order = orders.poll();
-			if (order != null)
+			if (order != null) {
 				_collector.emit(new Values(order));
+			}else{
+				Utils.sleep(20);
+			}
 		} while (order != null);
 	}
 

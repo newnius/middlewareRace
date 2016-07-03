@@ -26,7 +26,7 @@ public class TairOperatorImpl {
 		// 创建config server列表
 		List<String> confServers = new ArrayList<String>();
 		confServers.add(masterConfigServer);
-		//confServers.add(slaveConfigServer); // 可选
+		// confServers.add(slaveConfigServer); // 可选
 
 		// 创建客户端实例
 		tairManager = new DefaultTairManager();
@@ -41,21 +41,20 @@ public class TairOperatorImpl {
 	}
 
 	public boolean write(Serializable key, Serializable value) {
-		logger.info("Tair set " + key);
+		logger.info("Tair set {" + key + ":" + value + "}");
 		// 第一个参数是namespace，第二个是key，第三是value，第四个是版本，第五个是有效时间
 		ResultCode result = tairManager.put(RaceConfig.TairNamespace, key, value);
 		return result.isSuccess();
 	}
 
 	public Object get(Serializable key) {
-		logger.info("Tair get " + key);
 		// 第一个参数是namespce，第二个是key
 		Result<DataEntry> result = tairManager.get(RaceConfig.TairNamespace, key);
 		if (result.isSuccess()) {
 			DataEntry entry = result.getValue();
 			if (entry != null) {
 				// 数据存在
-				logger.info("value is " + entry.getValue().toString());
+				logger.info("Tair get {" + entry.getKey().toString() + ":" + entry.getValue().toString() + "}");
 				return entry.getValue();
 			} else {
 				// 数据不存在
