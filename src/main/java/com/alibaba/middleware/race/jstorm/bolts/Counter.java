@@ -1,13 +1,17 @@
 package com.alibaba.middleware.race.jstorm.bolts;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.middleware.race.model.OrderMessage;
-import com.alibaba.middleware.race.model.PaymentMessage;
+import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.model.Order;
+import com.alibaba.middleware.race.model.Payment;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -15,6 +19,7 @@ import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 
 public class Counter implements IRichBolt {
 
@@ -42,19 +47,19 @@ public class Counter implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
-		int platform = (Integer)tuple.getValueByField("platform");
+		int platform = (Integer) tuple.getValueByField("platform");
 		long time = (Long) tuple.getValueByField("minuteTime");
-		PaymentMessage payment = (PaymentMessage) tuple.getValueByField("payment");
+		Payment payment = (Payment) tuple.getValueByField("payment");
 		Double currentSum = 0.0;
-		
-		if(platform==OrderMessage.TAOBAO){
+
+		if (platform == Order.TAOBAO) {
 			if (!TBcounters.containsKey(time)) {
 				currentSum = TBcounters.get(time);
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			TBcounters.put(time, sum);
 			LOG.info("Total tb fee in " + time + ":" + sum);
-		}else{
+		} else {
 			if (!TMcounters.containsKey(time)) {
 				currentSum = TMcounters.get(time);
 			}
@@ -62,15 +67,15 @@ public class Counter implements IRichBolt {
 			TMcounters.put(time, sum);
 			LOG.info("Total tm fee in " + time + ":" + sum);
 		}
-		
-		if(payment.getPayPlatform() == PaymentMessage.PC){
+
+		if (payment.getPayPlatform() == Payment.PC) {
 			if (!PCcounters.containsKey(time)) {
 				currentSum = PCcounters.get(time);
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			PCcounters.put(time, sum);
 			LOG.info("Total pc fee in " + time + ":" + sum);
-		}else{
+		} else {
 			if (!Mcounters.containsKey(time)) {
 				currentSum = Mcounters.get(time);
 			}
@@ -78,7 +83,31 @@ public class Counter implements IRichBolt {
 			Mcounters.put(time, sum);
 			LOG.info("Total mobile fee in " + time + ":" + sum);
 		}
-		
+
+		// emit to save
+		Set<Long> minuteTimes = TBcounters.keySet();
+		List<Long> toBeDelete = new ArrayList<>();
+		for (Long minuteTime : minuteTimes) {
+			if (minuteTime < time - 10) {
+				collector.emit(new Values(RaceConfig.prex_taobao + minuteTime, TBcounters.get(minuteTime)));
+				toBeDelete.add(minuteTime);
+			}
+		}
+		for (Long minuteTime : toBeDelete) {
+			TBcounters.remove(minuteTime);
+		}
+
+		minuteTimes = TMcounters.keySet();
+		toBeDelete.clear();
+		for (Long minuteTime : minuteTimes) {
+			if (minuteTime < time - 10) {
+				collector.emit(new Values(RaceConfig.prex_tmall + minuteTime, TMcounters.get(minuteTime)));
+				toBeDelete.add(minuteTime);
+			}
+		}
+		for (Long minuteTime : toBeDelete) {
+			TMcounters.remove(minuteTime);
+		}
 		collector.ack(tuple);
 	}
 

@@ -6,7 +6,6 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
 
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
@@ -93,7 +92,7 @@ public class PayReader implements IRichSpout {
 			//Utils.sleep(10);
 			try {
 				OrderMessage orderMessage = orderMessages.take();
-				_collector.emit(new Values(RaceUtils.toMinuteTimestamp(orderMessage.getOrderId()), orderMessage));
+				_collector.emit(new Values(orderMessage));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -113,7 +112,7 @@ public class PayReader implements IRichSpout {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("minuteTime", "payment"));
+		declarer.declare(new Fields("payment"));
 	}
 
 	@Override

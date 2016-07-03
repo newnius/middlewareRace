@@ -1,7 +1,6 @@
 package com.alibaba.middleware.race.model;
 
 import java.io.Serializable;
-import java.util.Random;
 
 
 /**
@@ -10,11 +9,15 @@ import java.util.Random;
  * 反序列出消息
  */
 
-public class PaymentMessage implements Serializable{
+public class Payment implements Serializable{
 
-    private static final long serialVersionUID = -4721410670774102273L;
 
-    private long orderId; //订单ID
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3428231505051095311L;
+
+	private long orderId; //订单ID
 
     private double payAmount; //金额
 
@@ -35,6 +38,8 @@ public class PaymentMessage implements Serializable{
     private short payPlatform; //支付平台
     
     
+    public static final int PC = 0;
+    public static final int MOBILE = 1;
 
     /**
      * 付款记录创建时间
@@ -42,30 +47,25 @@ public class PaymentMessage implements Serializable{
     private long createTime; //13位数，毫秒级时间戳，初赛要求的时间都是指该时间
 
     //Kryo默认需要无参数构造函数
-    public PaymentMessage() {
+    public Payment() {
     }
+    
+    
 
-    private static Random rand = new Random();
 
-    public static PaymentMessage[] createPayMentMsg(OrderMessage orderMessage) {
-        PaymentMessage [] list = new PaymentMessage[2];
-        for (short i = 0; i < 2; i++) {
-            PaymentMessage msg = new PaymentMessage();
-            msg.orderId = orderMessage.getOrderId();
-            msg.paySource = i;
-            msg.payPlatform = (short) (i % 2);
-            msg.createTime = orderMessage.getCreateTime() + rand.nextInt(100);
-            msg.payAmount = 0.0;
-            list[i] = msg;
-        }
+    public Payment(PaymentMessage paymentMessage) {
+		super();
+		this.orderId = paymentMessage.getOrderId();
+		this.payAmount = paymentMessage.getPayAmount();
+		this.paySource = paymentMessage.getPaySource();
+		this.payPlatform = paymentMessage.getPayPlatform();
+		this.createTime = paymentMessage.getCreateTime();
+	}
 
-        list[0].payAmount = rand.nextInt((int) (orderMessage.getTotalPrice() / 2));
-        list[1].payAmount = orderMessage.getTotalPrice() - list[0].payAmount;
 
-        return list;
-    }
 
-    @Override
+
+	@Override
     public String toString() {
         return "PaymentMessage{" +
                 "orderId=" + orderId +

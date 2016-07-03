@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
-import com.alibaba.middleware.race.model.OrderMessage;
+import com.alibaba.middleware.race.model.Order;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -35,11 +35,11 @@ public class OrderSaver implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
-		OrderMessage orderMessage = (OrderMessage) tuple.getValueByField("order");
+		Order order = (Order) tuple.getValueByField("order");
 
 		// 写入tair
-		tairOperator.write(RaceConfig.prex_order + orderMessage.getOrderId(), orderMessage.getPlatform());
-		logger.info("Write order " + orderMessage.getOrderId() + " into Tair.");
+		tairOperator.write(RaceConfig.prex_order + order.getOrderId(), order.getPlatform());
+		logger.info("Write order " + order.getOrderId() + " into Tair.");
 		collector.ack(tuple);
 	}
 

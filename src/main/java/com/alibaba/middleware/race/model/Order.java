@@ -7,9 +7,12 @@ import java.io.Serializable;
  * 订单消息模型，只要模型中各个字段的类型和顺序和OrderMessage一样，即可用Kryo
  * 反序列出消息
  */
-public class OrderMessage implements Serializable{
-    private static final long serialVersionUID = -4082657304129211564L;
-    private long orderId; //订单ID
+public class Order implements Serializable{
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2337105241957909006L;
+	private long orderId; //订单ID
     private String buyerId; //买家ID
     private String productId; //商品ID
 
@@ -17,14 +20,27 @@ public class OrderMessage implements Serializable{
     private long createTime; //13位数数，毫秒级时间戳，订单创建时间
     private double totalPrice;
     
+    private int platform;
     
+    public static final int TAOBAO = 0;
+    public static final int TMALL = 1;
 
 
     //Kryo默认需要无参数构造函数
-    private OrderMessage() {
+    private Order() {
 
     }
-    
+	
+	
+	public Order(OrderMessage orderMessage){
+		super();
+		this.orderId = orderMessage.getOrderId();
+		this.createTime = orderMessage.getCreateTime();
+		this.buyerId = orderMessage.getBuyerId();
+		this.productId = orderMessage.getProductId();
+		this.salerId = orderMessage.getSalerId();
+		this.totalPrice = orderMessage.getTotalPrice();
+	}
 
 
 
@@ -37,6 +53,7 @@ public class OrderMessage implements Serializable{
                 ", salerId='" + salerId + '\'' +
                 ", createTime=" + createTime +
                 ", totalPrice=" + totalPrice +
+                ", platform="+ platform +
                 '}';
     }
 
@@ -89,6 +106,14 @@ public class OrderMessage implements Serializable{
     public void setCreateTime(long createTime) {
         this.createTime = createTime;
     }
+
+	public int getPlatform() {
+		return platform;
+	}
+
+	public void setPlatform(int platform) {
+		this.platform = platform;
+	}
     
     
 

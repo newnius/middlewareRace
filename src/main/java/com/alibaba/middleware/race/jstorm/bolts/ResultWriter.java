@@ -1,9 +1,13 @@
 package com.alibaba.middleware.race.jstorm.bolts;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -18,17 +22,27 @@ public class ResultWriter implements IRichBolt {
 	 */
 	private static final long serialVersionUID = 2030583843338570399L;
 	private OutputCollector collector;
-	private Logger Logger = LoggerFactory.getLogger(getClass());
+	private Logger logger = LoggerFactory.getLogger(getClass());
+	private TairOperatorImpl tair;
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
+		this.tair = new TairOperatorImpl(RaceConfig.TairConfigServer, RaceConfig.TairSalveConfigServer,
+				RaceConfig.TairGroup, RaceConfig.TairNamespace);
 	}
 
 	@Override
-	public void execute(Tuple input) {
-		collector.ack(input);
+	public void execute(Tuple tuple) {
+		Serializable key = (Serializable) tuple.getValueByField("key");
+		Serializable value = (Serializable) tuple.getValueByField("value");
+
+		// 写入tair
+		tair.write(key, value);
+		logger.info("Write result {" + key + ":" + value + "} into Tair.");
+
+		collector.ack(tuple);
 	}
 
 	@Override

@@ -44,10 +44,10 @@ public class RaceTopology {
         //builder.setSpout("payment-spout", new PayReader(), spout_Parallelism_hint);
         
         builder.setBolt("order-saver", new OrderSaver(), order_saver_Parallelism_hint).shuffleGrouping("order-spout");
-        //builder.setBolt("order-getter", new OrderGetter(), order_getter_Parallelism_hint).shuffleGrouping("paymeny-spout");
+        //builder.setBolt("order-getter", new OrderGetter(), order_getter_Parallelism_hint).shuffleGrouping("payment-spout");
         
-        //builder.setBolt("result", new Counter(), count_Parallelism_hint).fieldsGrouping("order-getter", new Fields("minuteTime"));
-        //builder.setBolt("result-writer", new ResultWriter(), tair_write_Parallelism_hint).shuffleGrouping("result");
+        //builder.setBolt("counter", new Counter(), count_Parallelism_hint).fieldsGrouping("order-getter", new Fields("minuteTime"));
+        //builder.setBolt("result-writer", new ResultWriter(), tair_write_Parallelism_hint).shuffleGrouping("counter");
         String topologyName = RaceConfig.JstormTopologyName;
 
         try {

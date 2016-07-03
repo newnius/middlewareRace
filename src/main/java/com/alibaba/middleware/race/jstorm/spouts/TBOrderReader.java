@@ -8,6 +8,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
+import com.alibaba.middleware.race.model.Order;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -30,7 +31,7 @@ public class TBOrderReader implements IRichSpout {
 	 */
 	private static final long serialVersionUID = 7527748428170112375L;
 	private DefaultMQPushConsumer consumer;
-	private LinkedBlockingQueue<OrderMessage> orderMessages;
+	private LinkedBlockingQueue<Order> orders;
 
 	private static Logger LOG = LoggerFactory.getLogger(TBOrderReader.class);
 	private SpoutOutputCollector _collector;
@@ -39,7 +40,7 @@ public class TBOrderReader implements IRichSpout {
 	@Override
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		_collector = collector;
-		orderMessages = new LinkedBlockingQueue<>();
+		orders = new LinkedBlockingQueue<>();
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 		//
@@ -79,13 +80,14 @@ public class TBOrderReader implements IRichSpout {
 						LOG.info("This is tb order");
 						LOG.info(new String(body));
 						OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-						orderMessage.setPlatform(OrderMessage.TAOBAO);
+						Order order = new Order(orderMessage);
+						order.setPlatform(Order.TAOBAO);
 						LOG.info("end of parse");
-						LOG.info("OrderId:" + orderMessage.getOrderId());
-						LOG.info(orderMessage.toString());
+						LOG.info("OrderId:" + order.getOrderId());
+						LOG.info(order.toString());
 						try {
-							orderMessages.put(orderMessage);
-							LOG.info("Total orders : " + orderMessages.size());
+							orders.put(order);
+							LOG.info("Total orders : " + orders.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -107,14 +109,14 @@ public class TBOrderReader implements IRichSpout {
 
 	@Override
 	public void nextTuple() {
-		LOG.info("Total orders : " + orderMessages.size());
+		LOG.info("nextTuple(), Total orders : " + orders.size());
 
-		OrderMessage orderMessage = null;
+		Order order = null;
 		do {
-			orderMessage = orderMessages.poll();
-			if (orderMessage != null)
-				_collector.emit(new Values(orderMessage));
-		} while (orderMessage != null);
+			order = orders.poll();
+			if (order != null)
+				_collector.emit(new Values(order));
+		} while (order != null);
 	}
 
 	@Override

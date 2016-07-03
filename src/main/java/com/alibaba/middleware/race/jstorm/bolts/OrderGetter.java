@@ -15,7 +15,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-public class OrderGetter implements IRichBolt{
+public class OrderGetter implements IRichBolt {
 
 	/**
 	 * 
@@ -28,27 +28,30 @@ public class OrderGetter implements IRichBolt{
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
-		tair = new TairOperatorImpl(RaceConfig.TairConfigServer, RaceConfig.TairSalveConfigServer,
-                RaceConfig.TairGroup, RaceConfig.TairNamespace);
+		tair = new TairOperatorImpl(RaceConfig.TairConfigServer, RaceConfig.TairSalveConfigServer, RaceConfig.TairGroup,
+				RaceConfig.TairNamespace);
 	}
 
 	@Override
 	public void execute(Tuple tuple) {
-		PaymentMessage payment = (PaymentMessage)tuple.getValueByField("payment");
-		Integer platform = (Integer)tair.get(RaceConfig.prex_order + payment.getOrderId());
+		PaymentMessage payment = (PaymentMessage) tuple.getValueByField("payment");
+		Integer platform = (Integer) tair.get(RaceConfig.prex_order + payment.getOrderId());
+		if (platform == null) {
+			collector.fail(tuple);
+		}
 		collector.emit(new Values(platform, payment, RaceUtils.toMinuteTimestamp(payment.getCreateTime())));
 		collector.ack(tuple);
 	}
 
 	@Override
 	public void cleanup() {
-		
+
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declare(new Fields("platform", "payment", "minuteTime"));
-		
+
 	}
 
 	@Override
