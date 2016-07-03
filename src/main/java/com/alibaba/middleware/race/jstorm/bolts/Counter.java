@@ -58,6 +58,7 @@ public class Counter implements IRichBolt {
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			TBcounters.put(time, sum);
+			collector.emit(new Values(RaceConfig.prex_taobao + time, sum));
 			LOG.info("Total tb fee in " + time + ":" + sum);
 		} else {
 			if (!TMcounters.containsKey(time)) {
@@ -65,8 +66,10 @@ public class Counter implements IRichBolt {
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			TMcounters.put(time, sum);
+			collector.emit(new Values(RaceConfig.prex_tmall + time, sum));
 			LOG.info("Total tm fee in " + time + ":" + sum);
 		}
+		
 
 		if (payment.getPayPlatform() == Payment.PC) {
 			if (!PCcounters.containsKey(time)) {
