@@ -43,7 +43,8 @@ public class TBOrderReader implements IRichSpout {
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 		//
-		// consumer.setNamesrvAddr("192.168.56.104:9876");
+		if(RaceConfig.RocketMqAddr.length()>0)
+			consumer.setNamesrvAddr(RaceConfig.RocketMqAddr);
 		try {
 			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
 			consumer.subscribe(RaceConfig.MqTmallTradeTopic, "*");
