@@ -50,41 +50,41 @@ public class Counter implements IRichBolt {
 		int platform = (Integer) tuple.getValueByField("platform");
 		long time = (Long) tuple.getValueByField("minuteTime");
 		Payment payment = (Payment) tuple.getValueByField("payment");
-		Double currentSum = 0.0;
+		double currentSum = 0.0;
 
 		if (platform == Order.TAOBAO) {
-			if (!TBcounters.containsKey(time)) {
+			if (TBcounters.containsKey(time)) {
 				currentSum = TBcounters.get(time);
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			TBcounters.put(time, sum);
-			collector.emit(new Values(RaceConfig.prex_taobao + time, sum));
+			collector.emit(new Values(RaceConfig.prex_taobao + time, String.format("%.2f", sum)));
 			LOG.info("Total tb fee in " + time + ":" + sum);
 		} else {
-			if (!TMcounters.containsKey(time)) {
+			if (TMcounters.containsKey(time)) {
 				currentSum = TMcounters.get(time);
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			TMcounters.put(time, sum);
-			collector.emit(new Values(RaceConfig.prex_tmall + time, sum));
+			collector.emit(new Values(RaceConfig.prex_tmall + time, String.format("%.2f", sum)));
 			LOG.info("Total tm fee in " + time + ":" + sum);
 		}
 		
 
 		if (payment.getPayPlatform() == Payment.PC) {
-			if (!PCcounters.containsKey(time)) {
+			if (PCcounters.containsKey(time)) {
 				currentSum = PCcounters.get(time);
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			PCcounters.put(time, sum);
-			LOG.info("Total pc fee in " + time + ":" + sum);
+			LOG.info("Total pc fee in " + time + ":" + String.format("%.2f", sum));
 		} else {
-			if (!Mcounters.containsKey(time)) {
+			if (Mcounters.containsKey(time)) {
 				currentSum = Mcounters.get(time);
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			Mcounters.put(time, sum);
-			LOG.info("Total mobile fee in " + time + ":" + sum);
+			LOG.info("Total mobile fee in " + time + ":" + String.format("%.2f", sum));
 		}
 
 		// emit to save
@@ -92,7 +92,7 @@ public class Counter implements IRichBolt {
 		List<Long> toBeDelete = new ArrayList<>();
 		for (Long minuteTime : minuteTimes) {
 			if (minuteTime < time - 10) {
-				collector.emit(new Values(RaceConfig.prex_taobao + minuteTime, TBcounters.get(minuteTime)));
+				collector.emit(new Values(RaceConfig.prex_taobao + minuteTime, String.format("%.2f", TBcounters.get(minuteTime))));
 				toBeDelete.add(minuteTime);
 			}
 		}
@@ -104,7 +104,7 @@ public class Counter implements IRichBolt {
 		toBeDelete.clear();
 		for (Long minuteTime : minuteTimes) {
 			if (minuteTime < time - 10) {
-				collector.emit(new Values(RaceConfig.prex_tmall + minuteTime, TMcounters.get(minuteTime)));
+				collector.emit(new Values(RaceConfig.prex_tmall + minuteTime, String.format("%.2f", TMcounters.get(minuteTime))));
 				toBeDelete.add(minuteTime);
 			}
 		}
