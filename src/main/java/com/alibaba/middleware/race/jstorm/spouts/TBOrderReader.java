@@ -47,6 +47,8 @@ public class TBOrderReader implements IRichSpout {
 		// consumer.setNamesrvAddr("192.168.56.104:9876");
 		try {
 			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
+			consumer.subscribe(RaceConfig.MqTmallTradeTopic, "*");
+			consumer.subscribe(RaceConfig.MqPayTopic, "*");
 		} catch (MQClientException ex) {
 			ex.printStackTrace();
 			LOG.error(ex.getErrorMessage());
@@ -72,13 +74,16 @@ public class TBOrderReader implements IRichSpout {
 						continue;
 					}
 
-					OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-					LOG.info(orderMessage.toString());
-					try {
-						orderMessages.put(orderMessage);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-						LOG.error(e.getMessage());
+					LOG.info(msg.getTopic());
+					if (msg.getTopic().equals(RaceConfig.MqTaobaoTradeTopic)) {
+						OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
+						LOG.info(orderMessage.toString());
+						try {
+							orderMessages.put(orderMessage);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+							LOG.error(e.getMessage());
+						}
 					}
 				}
 				return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
@@ -97,23 +102,10 @@ public class TBOrderReader implements IRichSpout {
 	@Override
 	public void nextTuple() {
 
-		OrderMessage order = new OrderMessage(new Random().nextLong(), System.currentTimeMillis(),
-				new Random().nextLong(), new Random().nextInt() % 2);
-		_collector.emit(new Values(RaceUtils.toMinuteTimestamp(order.getOrderId()), order));
-
-		if(1>0)
-			return;
-		
 		while (1 > 0) {
 			// Utils.sleep(10);
-			try {
-				OrderMessage orderMessage = orderMessages.take();
-				_collector.emit(new Values(RaceUtils.toMinuteTimestamp(orderMessage.getOrderId()), orderMessage));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				LOG.error(e.getMessage());
-			}
-
+			OrderMessage orderMessage = orderMessages.poll();
+			_collector.emit(new Values(RaceUtils.toMinuteTimestamp(orderMessage.getOrderId()), orderMessage));
 		}
 	}
 
