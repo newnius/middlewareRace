@@ -64,7 +64,6 @@ public class TMOrderReader implements IRichSpout {
 
 			@Override
 			public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-				LOG.info("registerMessageListener called.");
 				for (MessageExt msg : msgs) {
 
 					byte[] body = msg.getBody();
@@ -86,8 +85,7 @@ public class TMOrderReader implements IRichSpout {
 						OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
 						Order order = new Order(orderMessage);
 						order.setPlatform(Order.TMALL);
-						LOG.info("end of parse");
-						LOG.info("OrderId:" + order.getOrderId());
+						LOG.info("TMOrderId:" + order.getOrderId());
 						LOG.info(order.toString());
 						try {
 							orders.put(order);
@@ -113,7 +111,7 @@ public class TMOrderReader implements IRichSpout {
 
 	@Override
 	public void nextTuple() {
-		LOG.info("before get, Total TMorders : " + orders.size());
+//		LOG.info("before get, Total TMorders : " + orders.size());
 
 		Order order = null;
 		do {

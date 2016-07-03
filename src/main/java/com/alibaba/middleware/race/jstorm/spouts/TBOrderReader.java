@@ -61,7 +61,6 @@ public class TBOrderReader implements IRichSpout {
 
 			@Override
 			public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-				LOG.info("registerMessageListener called.");
 				for (MessageExt msg : msgs) {
 
 					byte[] body = msg.getBody();
@@ -79,16 +78,14 @@ public class TBOrderReader implements IRichSpout {
 
 					LOG.info(msg.getTopic());
 					if (msg.getTopic().equals(RaceConfig.MqTaobaoTradeTopic)) {
-						LOG.info("This is tb order");
 						OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
 						Order order = new Order(orderMessage);
 						order.setPlatform(Order.TAOBAO);
-						LOG.info("end of parse");
-						LOG.info("OrderId:" + order.getOrderId());
+						LOG.info("TBOrderId:" + order.getOrderId());
 						LOG.info(order.toString());
 						try {
 							orders.put(order);
-							LOG.info("after put, Total orders : " + orders.size());
+							LOG.info("after put, Total TBorders : " + orders.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -110,7 +107,7 @@ public class TBOrderReader implements IRichSpout {
 
 	@Override
 	public void nextTuple() {
-		LOG.info("before get, Total orders : " + orders.size());
+//		LOG.info("before get, Total orders : " + orders.size());
 
 		Order order = null;
 		do {
