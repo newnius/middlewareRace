@@ -9,9 +9,10 @@ public class RaceConfig implements Serializable {
 	 */
 	private static final long serialVersionUID = 7160717176287541054L;
 	// 这些是写tair key的前缀
-	public static String prex_tmall = "platformTmall_";
-	public static String prex_taobao = "platformTaobao_";
-	public static String prex_ratio = "ratio_";
+	public static String group = "41530gvxko";
+	public static String prex_tmall = "platformTmall_" + group+"_";
+	public static String prex_taobao = "platformTaobao_" + group+"_";
+	public static String prex_ratio = "ratio_" + group+"_";
 
 	public static String prex_order = "order_";
 
