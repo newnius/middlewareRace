@@ -71,7 +71,7 @@ public class MqReader implements IRichSpout {
 			public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
 				for (MessageExt msg : msgs) {
 
-					LOG.info(msg.getTopic());
+					//LOG.info(msg.getTopic());
 					byte[] body = msg.getBody();
 					OrderMessage orderMessage;
 					Order order;
@@ -89,7 +89,7 @@ public class MqReader implements IRichSpout {
 						order = new Order(orderMessage);
 						order.setPlatform(Order.TAOBAO);
 						LOG.info("TBOrderId:" + order.getOrderId());
-						LOG.info(order.toString());
+						//LOG.info(order.toString());
 						try {
 							TBorders.put(order);
 							LOG.info("after put, Total TBorders : " + TBorders.size());
@@ -102,7 +102,7 @@ public class MqReader implements IRichSpout {
 					case RaceConfig.MqTmallTradeTopic:
 						if (body.length == 2 && body[0] == 0 && body[1] == 0) {
 							// Info: 生产者停止生成数据, 并不意味着马上结束
-							LOG.info("Got the end signal of TBOrderMessage");
+							LOG.info("Got the end signal of TMOrderMessage");
 							continue;
 						}
 
@@ -110,7 +110,7 @@ public class MqReader implements IRichSpout {
 						order = new Order(orderMessage);
 						order.setPlatform(Order.TMALL);
 						LOG.info("TMOrderId:" + order.getOrderId());
-						LOG.info(order.toString());
+						//LOG.info(order.toString());
 						try {
 							TMorders.put(order);
 							LOG.info("after put, Total TMorders : " + TMorders.size());
@@ -129,10 +129,10 @@ public class MqReader implements IRichSpout {
 						PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
 						Payment payment = new Payment(paymentMessage);
 						LOG.info("payment OrderId:" + payment.getOrderId());
-						LOG.info(payment.toString());
+						//LOG.info(payment.toString());
 						try {
 							payments.put(payment);
-							LOG.info("after put, Total paymentss : " + payments.size());
+							LOG.info("after put, Total payments : " + payments.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -157,7 +157,7 @@ public class MqReader implements IRichSpout {
 	@Override
 	public void nextTuple() {
 		// LOG.info("before get, Total orders : " + orders.size());
-
+		boolean hasEmited = false;
 		Order order = null;
 		Payment payment;
 
@@ -166,8 +166,7 @@ public class MqReader implements IRichSpout {
 			order = TBorders.poll();
 			if (order != null) {
 				_collector.emit("tb-order", new Values(order));
-			} else {
-				Utils.sleep(20);
+				hasEmited = true;
 			}
 		} while (order != null);
 
@@ -176,8 +175,7 @@ public class MqReader implements IRichSpout {
 			order = TMorders.poll();
 			if (order != null) {
 				_collector.emit("tm-order", new Values(order));
-			} else {
-				Utils.sleep(20);
+				hasEmited = true;
 			}
 		} while (order != null);
 
@@ -188,10 +186,12 @@ public class MqReader implements IRichSpout {
 				payment = payments.poll();
 				if (payment != null) {
 					_collector.emit("payment", new Values(payment));
-				} else {
-					Utils.sleep(20);
+					hasEmited = true;
 				}
 			} while (payment != null);
+		}
+		if(!hasEmited){
+			Utils.sleep(1000);
 		}
 	}
 

@@ -39,7 +39,7 @@ public class OrderSaver implements IRichBolt {
 
 		// 写入tair
 		tairOperator.write(RaceConfig.prex_order + order.getOrderId(), order.getPlatform());
-		logger.info("Write order " + order.getOrderId() + " into Tair.");
+		//logger.info("Write order " + order.getOrderId() + " into Tair.");
 		collector.ack(tuple);
 	}
 

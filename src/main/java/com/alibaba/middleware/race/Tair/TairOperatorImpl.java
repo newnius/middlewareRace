@@ -67,6 +67,15 @@ public class TairOperatorImpl {
 
 		return null;
 	}
+	
+	public void incrBy(Serializable key, Double value){
+		Double origin = (Double)get(key);
+		if(origin == null ){
+			origin = 0.0;
+		}
+		origin+=value;
+		write(key, origin);
+	}
 
 	public boolean remove(Serializable key) {
 		return false;

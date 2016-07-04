@@ -28,10 +28,10 @@ public class RaceTopology {
 	public static void main(String[] args) throws Exception {
 		Config conf = new Config();
 		int spout_Parallelism_hint = 1;
-		int order_saver_Parallelism_hint = 2;
-		int order_getter_Parallelism_hint = 1;
+		int order_saver_Parallelism_hint = 3;
+		int order_getter_Parallelism_hint = 4;
 		int count_Parallelism_hint = 2;
-		int tair_write_Parallelism_hint = 1;
+		int tair_write_Parallelism_hint = 3;
 
 		TopologyBuilder builder = new TopologyBuilder();
 
@@ -44,7 +44,7 @@ public class RaceTopology {
 
 		builder.setBolt("counter", new Counter(), count_Parallelism_hint).fieldsGrouping("order-getter",
 				new Fields("minuteTime"));
-		builder.setBolt("result-writer", new ResultWriter(), tair_write_Parallelism_hint).shuffleGrouping("counter");
+		builder.setBolt("result-writer", new ResultWriter(), tair_write_Parallelism_hint).fieldsGrouping("counter", new Fields("key"));
 		String topologyName = RaceConfig.JstormTopologyName;
 
 		try {

@@ -40,7 +40,7 @@ public class OrderGetter implements IRichBolt {
 	public void execute(Tuple tuple) {
 		Payment payment = (Payment) tuple.getValueByField("payment");
 		
-		logger.info(payment.toString());
+		//logger.info(payment.toString());
 		
 		Object value = tair.get(RaceConfig.prex_order + payment.getOrderId());
 		if (value == null) {

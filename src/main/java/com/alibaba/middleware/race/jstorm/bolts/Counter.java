@@ -1,10 +1,10 @@
 package com.alibaba.middleware.race.jstorm.bolts;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,15 +33,19 @@ public class Counter implements IRichBolt {
 	private Map<Long, Double> PCcounters;
 	private Map<Long, Double> Mcounters;
 	private static Logger LOG = LoggerFactory.getLogger(Counter.class);
+	private long latestTime;
+	private long startTime;
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
-		TBcounters = new HashMap<>();
-		TMcounters = new HashMap<>();
-		PCcounters = new HashMap<>();
-		Mcounters = new HashMap<>();
+		TBcounters = new TreeMap<>();
+		TMcounters = new TreeMap<>();
+		PCcounters = new TreeMap<>();
+		Mcounters = new TreeMap<>();
+		latestTime = 0;
+		startTime = System.currentTimeMillis();
 
 	}
 
@@ -51,7 +55,7 @@ public class Counter implements IRichBolt {
 		long time = (Long) tuple.getValueByField("minuteTime");
 		Payment payment = (Payment) tuple.getValueByField("payment");
 		double currentSum = 0.0;
-
+		
 		//LOG.info(payment.toString());
 		
 		if (platform == Order.TAOBAO) {
@@ -60,7 +64,7 @@ public class Counter implements IRichBolt {
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			TBcounters.put(time, sum);
-			collector.emit(new Values(RaceConfig.prex_taobao + time, sum));
+			//collector.emit(new Values(RaceConfig.prex_taobao + time, sum));
 			LOG.info("Total tb fee in " + time + ":" + sum);
 		} else {
 			if (TMcounters.containsKey(time)) {
@@ -68,11 +72,12 @@ public class Counter implements IRichBolt {
 			}
 			Double sum = currentSum + payment.getPayAmount();
 			TMcounters.put(time, sum);
-			collector.emit(new Values(RaceConfig.prex_tmall + time, sum));
+			//collector.emit(new Values(RaceConfig.prex_tmall + time, sum));
 			LOG.info("Total tm fee in " + time + ":" + sum);
 		}
 		
 
+		currentSum = 0.0;
 		if (payment.getPayPlatform() == Payment.PC) {
 			if (PCcounters.containsKey(time)) {
 				currentSum = PCcounters.get(time);
@@ -93,26 +98,27 @@ public class Counter implements IRichBolt {
 		Set<Long> minuteTimes = TBcounters.keySet();
 		List<Long> toBeDelete = new ArrayList<>();
 		for (Long minuteTime : minuteTimes) {
-			if (minuteTime < time - 10) {
+			if (minuteTime < latestTime - 3 * 40) {
 				collector.emit(new Values(RaceConfig.prex_taobao + minuteTime, TBcounters.get(minuteTime)));
 				toBeDelete.add(minuteTime);
 			}
 		}
 		for (Long minuteTime : toBeDelete) {
-			//TBcounters.remove(minuteTime);
+			TBcounters.remove(minuteTime);
 		}
 
 		minuteTimes = TMcounters.keySet();
 		toBeDelete.clear();
 		for (Long minuteTime : minuteTimes) {
-			if (minuteTime < time - 10) {
+			if (minuteTime < latestTime - 3 * 40) {//after 3 minutes
 				collector.emit(new Values(RaceConfig.prex_tmall + minuteTime, TMcounters.get(minuteTime)));
 				toBeDelete.add(minuteTime);
 			}
 		}
 		for (Long minuteTime : toBeDelete) {
-			//TMcounters.remove(minuteTime);
+			TMcounters.remove(minuteTime);
 		}
+		latestTime = Math.max(time, latestTime);
 		collector.ack(tuple);
 	}
 

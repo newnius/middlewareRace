@@ -36,11 +36,11 @@ public class ResultWriter implements IRichBolt {
 	@Override
 	public void execute(Tuple tuple) {
 		Serializable key = (Serializable) tuple.getValueByField("key");
-		Serializable value = (Serializable) tuple.getValueByField("value");
+		Double value = (Double) tuple.getValueByField("value");
 
 		// 写入tair
-		tair.write(key, value);
-		logger.info("Write result {" + key + ":" + value + "} into Tair.");
+		tair.incrBy(key, value);
+		//logger.info("Write result {" + key + ":" + value + "} into Tair.");
 
 		collector.ack(tuple);
 	}
