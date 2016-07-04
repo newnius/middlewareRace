@@ -43,7 +43,7 @@ public class RaceTopology {
 				"payment");
 
 		builder.setBolt("counter", new Counter(), count_Parallelism_hint).fieldsGrouping("order-getter",
-				new Fields("minuteTime"));
+				new Fields("minuteTime")).allGrouping("mq-reader", "flush");
 		builder.setBolt("result-writer", new ResultWriter(), tair_write_Parallelism_hint).fieldsGrouping("counter", new Fields("key"));
 		String topologyName = RaceConfig.JstormTopologyName;
 
