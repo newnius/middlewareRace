@@ -3,8 +3,6 @@ package com.alibaba.middleware.race.jstorm.bolts;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
@@ -22,7 +20,7 @@ public class ResultWriter implements IRichBolt {
 	 */
 	private static final long serialVersionUID = 2030583843338570399L;
 	private OutputCollector collector;
-	private Logger logger = LoggerFactory.getLogger(getClass());
+	//private Logger logger = LoggerFactory.getLogger(getClass());
 	private TairOperatorImpl tair;
 
 	@SuppressWarnings("rawtypes")

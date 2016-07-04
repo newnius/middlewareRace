@@ -2,8 +2,6 @@ package com.alibaba.middleware.race.jstorm.bolts;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
@@ -21,7 +19,7 @@ public class OrderSaver implements IRichBolt {
 	 * 
 	 */
 	private static final long serialVersionUID = -6290957298762116810L;
-	private static Logger logger = LoggerFactory.getLogger(OrderSaver.class);
+	//private static Logger logger = LoggerFactory.getLogger(OrderSaver.class);
 	private OutputCollector collector;
 	private TairOperatorImpl tairOperator;
 
