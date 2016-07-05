@@ -34,7 +34,7 @@ public class Counter implements IRichBolt {
 	private Map<Long, Double> Mcounters;
 	private static Logger LOG = LoggerFactory.getLogger(Counter.class);
 	private long startTime;
-	private boolean hasNewData = false;
+	private boolean updateToDate = true;
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -50,8 +50,11 @@ public class Counter implements IRichBolt {
 	@Override
 	public void execute(Tuple tuple) {
 		if ("flush".equals(tuple.getSourceStreamId())) {
-			//LOG.info("Got flush signal");
-			flush();
+			// LOG.info("Got flush signal");
+			if (!updateToDate) {
+				flush();
+			}
+			updateToDate = true;
 		} else {
 
 			int platform = (Integer) tuple.getValueByField("platform");
@@ -69,7 +72,7 @@ public class Counter implements IRichBolt {
 				TBcounters.put(time, sum);
 				// collector.emit(new Values(RaceConfig.prex_taobao + time,
 				// sum));
-				//LOG.info("Total tb fee in " + time + ":" + sum);
+				// LOG.info("Total tb fee in " + time + ":" + sum);
 			} else {
 				if (TMcounters.containsKey(time)) {
 					currentSum = TMcounters.get(time);
@@ -78,7 +81,7 @@ public class Counter implements IRichBolt {
 				TMcounters.put(time, sum);
 				// collector.emit(new Values(RaceConfig.prex_tmall + time,
 				// sum));
-				//LOG.info("Total tm fee in " + time + ":" + sum);
+				// LOG.info("Total tm fee in " + time + ":" + sum);
 			}
 
 			currentSum = 0.0;
@@ -88,21 +91,21 @@ public class Counter implements IRichBolt {
 				}
 				Double sum = currentSum + payment.getPayAmount();
 				PCcounters.put(time, sum);
-				//LOG.info("Total pc fee in " + time + ":" + sum);
+				// LOG.info("Total pc fee in " + time + ":" + sum);
 			} else {
 				if (Mcounters.containsKey(time)) {
 					currentSum = Mcounters.get(time);
 				}
 				Double sum = currentSum + payment.getPayAmount();
 				Mcounters.put(time, sum);
-				//LOG.info("Total mobile fee in " + time + ":" + sum);
+				// LOG.info("Total mobile fee in " + time + ":" + sum);
 			}
-			if (System.currentTimeMillis() - startTime > 15 * 60 * 1000) {
+			updateToDate = false;
+			if (System.currentTimeMillis() - startTime > 16 * 60 * 1000) {
 				flush();
 			}
-			hasNewData = true;
 		}
-		
+
 		collector.ack(tuple);
 	}
 
@@ -128,24 +131,21 @@ public class Counter implements IRichBolt {
 			TMcounters.remove(minuteTime);
 		}
 
-		if (hasNewData) {
-			Double totalPC = 0.0;
-			Double totalWire = 0.0;
-			for (Long minuteTime : PCcounters.keySet()) {
-				if (PCcounters.containsKey(minuteTime)) {
-					totalPC += PCcounters.get(minuteTime);
-				}
-				if (Mcounters.containsKey(minuteTime)) {
-					totalWire += Mcounters.get(minuteTime);
-				}
-				//avoid overflow exception
-				if (Math.abs(totalPC - 0.0) < 0.001) {
-					totalPC = 1.0;
-				}
-				collector.emit(new Values(RaceConfig.prex_ratio + minuteTime, totalWire / totalPC));
+		Double totalPC = 0.0;
+		Double totalWire = 0.0;
+		for (Long minuteTime : PCcounters.keySet()) {
+			if (PCcounters.containsKey(minuteTime)) {
+				totalPC += PCcounters.get(minuteTime);
 			}
+			if (Mcounters.containsKey(minuteTime)) {
+				totalWire += Mcounters.get(minuteTime);
+			}
+			// avoid overflow exception
+			if (Math.abs(totalPC - 0.0) < 0.001) {
+				totalPC = 1.0;
+			}
+			collector.emit(new Values(RaceConfig.prex_ratio + minuteTime, totalWire / totalPC));
 		}
-		hasNewData = false;
 
 	}
 

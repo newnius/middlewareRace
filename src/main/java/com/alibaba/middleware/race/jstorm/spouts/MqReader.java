@@ -36,10 +36,7 @@ public class MqReader implements IRichSpout {
 	 */
 	private static final long serialVersionUID = 7527748428170112375L;
 	private DefaultMQPushConsumer consumer;
-	private LinkedBlockingQueue<Order> TMOrders;
-	private Map<Long, Order> waitingTMOrders;
-	private LinkedBlockingQueue<Order> TBOrders;
-	private Map<Long, Order> waitingTBOrders;
+	private ConcurrentHashMap<Long, Boolean> orders;
 	private LinkedBlockingQueue<Payment> payments;
 	private Map<Long, Payment> waitingPayments;
 	private long startTime;
@@ -53,14 +50,11 @@ public class MqReader implements IRichSpout {
 	@Override
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		_collector = collector;
-		TBOrders = new LinkedBlockingQueue<>();
-		waitingTBOrders = new ConcurrentHashMap<>();
-		TMOrders = new LinkedBlockingQueue<>();
-		waitingTMOrders = new ConcurrentHashMap<>();
+		orders = new ConcurrentHashMap<>();
 		payments = new LinkedBlockingQueue<>();
 		waitingPayments = new ConcurrentHashMap<>();
 		startTime = System.currentTimeMillis();
-		freezeTime = System.currentTimeMillis();
+		freezeTime = System.currentTimeMillis() + 100;
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 		//
@@ -84,7 +78,6 @@ public class MqReader implements IRichSpout {
 					// LOG.info(msg.getTopic());
 					byte[] body = msg.getBody();
 					OrderMessage orderMessage;
-					Order order;
 
 					switch (msg.getTopic()) {
 					case RaceConfig.MqTaobaoTradeTopic:
@@ -96,18 +89,12 @@ public class MqReader implements IRichSpout {
 						}
 
 						orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-						order = new Order(orderMessage);
-						order.setPlatform(Order.TAOBAO);
 						// LOG.info("TBOrderId:" + order.getOrderId());
 						// LOG.info(order.toString());
-						try {
-							TBOrders.put(order);
-							// LOG.info("after put, Total TBorders : " +
-							// TBOrders.size());
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-							LOG.error(e.getMessage());
-						}
+						orders.put(orderMessage.getOrderId(), true);
+						// LOG.info("after put, Total TBorders : " +
+						// TBOrders.size());
+
 						break;
 
 					case RaceConfig.MqTmallTradeTopic:
@@ -118,18 +105,12 @@ public class MqReader implements IRichSpout {
 						}
 
 						orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-						order = new Order(orderMessage);
-						order.setPlatform(Order.TMALL);
 						// LOG.info("TMOrderId:" + order.getOrderId());
 						// LOG.info(order.toString());
-						try {
-							TMOrders.put(order);
-							// LOG.info("after put, Total TMorders : " +
-							// TMOrders.size());
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-							LOG.error(e.getMessage());
-						}
+						orders.put(orderMessage.getOrderId(), false);
+						// LOG.info("after put, Total TMorders : " +
+						// TMOrders.size());
+
 						break;
 
 					case RaceConfig.MqPayTopic:
@@ -171,41 +152,27 @@ public class MqReader implements IRichSpout {
 	public void nextTuple() {
 		// LOG.info("before get, Total orders : " + orders.size());
 		boolean hasEmited = false;
-		Order order = null;
 		Payment payment;
-
-		// emit tb orders
-		do {
-			order = TBOrders.poll();
-			if (order != null) {
-				long msgId = msgIdGenerator.getAndIncrement();
-				waitingTBOrders.put(msgId, order);
-				_collector.emit("tb-order", new Values(order), "tb_" + msgId);
-				hasEmited = true;
-			}
-		} while (order != null);
-
-		// emit tm orders
-		do {
-			order = TMOrders.poll();
-			if (order != null) {
-				long msgId = msgIdGenerator.getAndIncrement();
-				waitingTMOrders.put(msgId, order);
-				_collector.emit("tm-order", new Values(order), "tm_" + msgId);
-				hasEmited = true;
-			}
-		} while (order != null);
 
 		// start emit after 60s
 		if (System.currentTimeMillis() > freezeTime) {
 			// emit payments
 			do {
 				payment = payments.poll();
-				if (payment != null) {
+				if (payment != null && orders.containsKey(payment.getOrderId())) {
 					long msgId = msgIdGenerator.getAndIncrement();
 					waitingPayments.put(msgId, payment);
-					_collector.emit("payment", new Values(payment), "pay_" + msgId);
+					_collector.emit("payment",
+							new Values(payment, orders.get(payment.getOrderId()) ? Order.TAOBAO : Order.TMALL,
+									RaceUtils.toMinuteTimestamp(payment.getCreateTime())),
+							"pay_" + msgId);
 					hasEmited = true;
+				} else if (payment != null) {
+					try {
+						payments.put(payment);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			} while (payment != null);
 		}
@@ -217,7 +184,7 @@ public class MqReader implements IRichSpout {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		} else {
+		} else if (!hasEmited) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -233,14 +200,6 @@ public class MqReader implements IRichSpout {
 		String type = aStrings[0];
 		long msgId = new Long(aStrings[1]);
 		switch (type) {
-		case "tb":
-			waitingTBOrders.remove(msgId);
-			break;
-
-		case "tm":
-			waitingTMOrders.remove(msgId);
-			break;
-
 		case "pay":
 			waitingPayments.remove(msgId);
 			break;
@@ -255,24 +214,6 @@ public class MqReader implements IRichSpout {
 		String type = aStrings[0];
 		long msgId = new Long(aStrings[1]);
 		switch (type) {
-		case "tb":
-			Order order = waitingTBOrders.get(msgId);
-			if (order != null) {
-				_collector.emit("tb-order", new Values(order), "tb_" + msgId);
-			} else {
-				LOG.warn(messageId + " is null");
-			}
-			break;
-
-		case "tm":
-			Order order2 = waitingTMOrders.get(msgId);
-			if (order2 != null) {
-				_collector.emit("tm-order", new Values(order2), "tm_" + msgId);
-			} else {
-				LOG.warn(messageId + " is null");
-			}
-			break;
-
 		case "pay":
 			Payment payment = waitingPayments.get(msgId);
 			if (payment != null) {
@@ -288,9 +229,9 @@ public class MqReader implements IRichSpout {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declareStream("tb-order", new Fields("order"));
-		declarer.declareStream("tm-order", new Fields("order"));
-		declarer.declareStream("payment", new Fields("payment"));
+		// declarer.declareStream("tb-order", new Fields("order"));
+		// declarer.declareStream("tm-order", new Fields("order"));
+		declarer.declareStream("payment", new Fields("payment", "platform", "minuteTime"));
 		declarer.declareStream("flush", new Fields());
 	}
 

@@ -30,20 +30,18 @@ public class RaceTopology {
 		int spout_Parallelism_hint = 1;
 		int order_saver_Parallelism_hint = 3;
 		int order_getter_Parallelism_hint = 4;
-		int count_Parallelism_hint = 2;
+		int count_Parallelism_hint = 3;
 		int tair_write_Parallelism_hint = 3;
 
 		TopologyBuilder builder = new TopologyBuilder();
 
 		builder.setSpout("mq-reader", new MqReader(), spout_Parallelism_hint);
 
-		builder.setBolt("order-saver", new OrderSaver(), order_saver_Parallelism_hint)
-				.shuffleGrouping("mq-reader", "tb-order").shuffleGrouping("mq-reader", "tm-order");
-		builder.setBolt("order-getter", new OrderGetter(), order_getter_Parallelism_hint).shuffleGrouping("mq-reader",
-				"payment");
+		//builder.setBolt("order-saver", new OrderSaver(), order_saver_Parallelism_hint).shuffleGrouping("mq-reader", "tb-order").shuffleGrouping("mq-reader", "tm-order");
+		//builder.setBolt("order-getter", new OrderGetter(), order_getter_Parallelism_hint).shuffleGrouping("mq-reader","payment");
 
-		builder.setBolt("counter", new Counter(), count_Parallelism_hint).fieldsGrouping("order-getter",
-				new Fields("minuteTime")).allGrouping("mq-reader", "flush");
+		builder.setBolt("counter", new Counter(), count_Parallelism_hint).fieldsGrouping("mq-reader",
+				"payment", new Fields("minuteTime")).allGrouping("mq-reader", "flush");
 		builder.setBolt("result-writer", new ResultWriter(), tair_write_Parallelism_hint).fieldsGrouping("counter", new Fields("key"));
 		String topologyName = RaceConfig.JstormTopologyName;
 
