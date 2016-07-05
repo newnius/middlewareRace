@@ -3,7 +3,6 @@ package com.alibaba.middleware.race.jstorm.bolts;
 import java.io.Serializable;
 import java.util.Map;
 
-
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 
@@ -20,7 +19,7 @@ public class ResultWriter implements IRichBolt {
 	 */
 	private static final long serialVersionUID = 2030583843338570399L;
 	private OutputCollector collector;
-	//private Logger logger = LoggerFactory.getLogger(getClass());
+	// private Logger logger = LoggerFactory.getLogger(getClass());
 	private TairOperatorImpl tair;
 
 	@SuppressWarnings("rawtypes")
@@ -36,9 +35,13 @@ public class ResultWriter implements IRichBolt {
 		Serializable key = (Serializable) tuple.getValueByField("key");
 		Double value = (Double) tuple.getValueByField("value");
 
-		// 写入tair
-		tair.incrBy(key, value);
-		//logger.info("Write result {" + key + ":" + value + "} into Tair.");
+		if (key.toString().startsWith(RaceConfig.prex_ratio)) {
+			tair.write(key, value);
+		} else {
+			// 写入tair
+			tair.incrBy(key, value);
+		}
+		// logger.info("Write result {" + key + ":" + value + "} into Tair.");
 
 		collector.ack(tuple);
 	}

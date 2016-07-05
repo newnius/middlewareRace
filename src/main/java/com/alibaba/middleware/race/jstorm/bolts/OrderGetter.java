@@ -45,7 +45,7 @@ public class OrderGetter implements IRichBolt {
 		Object value = tair.get(RaceConfig.prex_order + payment.getOrderId());
 		if (value == null) {
 			collector.fail(tuple);
-			logger.warn(RaceConfig.prex_order + payment.getOrderId() + " is null");
+			//logger.warn(RaceConfig.prex_order + payment.getOrderId() + " is null");
 		} else {
 			Integer platform = (Integer) value;
 

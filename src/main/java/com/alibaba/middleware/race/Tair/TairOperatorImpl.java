@@ -36,6 +36,7 @@ public class TairOperatorImpl {
 		tairManager.setGroupName(groupName);
 		// 初始化客户端
 		tairManager.init();
+		tairManager.setTimeout(200000);
 
 		logger = LoggerFactory.getLogger(getClass());
 	}

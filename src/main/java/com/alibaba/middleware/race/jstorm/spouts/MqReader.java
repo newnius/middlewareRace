@@ -6,7 +6,6 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
 
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
@@ -25,9 +24,9 @@ import com.alibaba.rocketmq.common.message.MessageExt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -44,6 +43,7 @@ public class MqReader implements IRichSpout {
 	private LinkedBlockingQueue<Payment> payments;
 	private Map<Long, Payment> waitingPayments;
 	private long startTime;
+	private long freezeTime;
 	private AtomicLong msgIdGenerator = new AtomicLong(1);
 
 	private static Logger LOG = LoggerFactory.getLogger(MqReader.class);
@@ -54,12 +54,13 @@ public class MqReader implements IRichSpout {
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		_collector = collector;
 		TBOrders = new LinkedBlockingQueue<>();
-		waitingTBOrders = new HashMap<>();
+		waitingTBOrders = new ConcurrentHashMap<>();
 		TMOrders = new LinkedBlockingQueue<>();
-		waitingTMOrders = new HashMap<>();
+		waitingTMOrders = new ConcurrentHashMap<>();
 		payments = new LinkedBlockingQueue<>();
-		waitingPayments = new HashMap<>();
+		waitingPayments = new ConcurrentHashMap<>();
 		startTime = System.currentTimeMillis();
+		freezeTime = System.currentTimeMillis();
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 		//
@@ -97,11 +98,12 @@ public class MqReader implements IRichSpout {
 						orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
 						order = new Order(orderMessage);
 						order.setPlatform(Order.TAOBAO);
-						LOG.info("TBOrderId:" + order.getOrderId());
+						// LOG.info("TBOrderId:" + order.getOrderId());
 						// LOG.info(order.toString());
 						try {
 							TBOrders.put(order);
-							LOG.info("after put, Total TBorders : " + TBOrders.size());
+							// LOG.info("after put, Total TBorders : " +
+							// TBOrders.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -118,11 +120,12 @@ public class MqReader implements IRichSpout {
 						orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
 						order = new Order(orderMessage);
 						order.setPlatform(Order.TMALL);
-						LOG.info("TMOrderId:" + order.getOrderId());
+						// LOG.info("TMOrderId:" + order.getOrderId());
 						// LOG.info(order.toString());
 						try {
 							TMOrders.put(order);
-							LOG.info("after put, Total TMorders : " + TMOrders.size());
+							// LOG.info("after put, Total TMorders : " +
+							// TMOrders.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -137,11 +140,12 @@ public class MqReader implements IRichSpout {
 						}
 						PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
 						Payment payment = new Payment(paymentMessage);
-						LOG.info("payment OrderId:" + payment.getOrderId());
+						// LOG.info("payment OrderId:" + payment.getOrderId());
 						// LOG.info(payment.toString());
 						try {
 							payments.put(payment);
-							LOG.info("after put, Total payments : " + payments.size());
+							// LOG.info("after put, Total payments : " +
+							// payments.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -193,7 +197,7 @@ public class MqReader implements IRichSpout {
 		} while (order != null);
 
 		// start emit after 60s
-		if (System.currentTimeMillis() - startTime > 1000 * 60 || payments.size() > 2000) {
+		if (System.currentTimeMillis() > freezeTime) {
 			// emit payments
 			do {
 				payment = payments.poll();
@@ -205,10 +209,20 @@ public class MqReader implements IRichSpout {
 				}
 			} while (payment != null);
 		}
-		if (!hasEmited) {
+		if (!hasEmited && System.currentTimeMillis() - startTime > 3 * 60 * 1000) {
 			_collector.emit("flush", new Values());
-			LOG.info("Send flush stream");
-			Utils.sleep(1000);
+			// LOG.info("Send flush stream");
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -242,18 +256,33 @@ public class MqReader implements IRichSpout {
 		long msgId = new Long(aStrings[1]);
 		switch (type) {
 		case "tb":
-			_collector.emit("tb-order", new Values(waitingTBOrders.remove(msgId)), "tb_" + msgId);
+			Order order = waitingTBOrders.get(msgId);
+			if (order != null) {
+				_collector.emit("tb-order", new Values(order), "tb_" + msgId);
+			} else {
+				LOG.warn(messageId + " is null");
+			}
 			break;
 
 		case "tm":
-			_collector.emit("tm-order", new Values(waitingTMOrders.remove(msgId)), "tm_" + msgId);
+			Order order2 = waitingTMOrders.get(msgId);
+			if (order2 != null) {
+				_collector.emit("tm-order", new Values(order2), "tm_" + msgId);
+			} else {
+				LOG.warn(messageId + " is null");
+			}
 			break;
 
 		case "pay":
-			_collector.emit("payment", new Values(waitingPayments.remove(msgId)), "pay_" + msgId);
+			Payment payment = waitingPayments.get(msgId);
+			if (payment != null) {
+				_collector.emit("payment", new Values(payment), "pay_" + msgId);
+			} else {
+				LOG.warn(messageId + " is null");
+			}
 			break;
 		}
-
+		freezeTime = System.currentTimeMillis() + 100;
 		LOG.info("fail " + id);
 	}
 
