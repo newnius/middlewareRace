@@ -39,7 +39,6 @@ public class MqReader implements IRichSpout {
 	private ConcurrentHashMap<Long, Boolean> orders;
 	private LinkedBlockingQueue<Payment> payments;
 	private Map<Long, Payment> waitingPayments;
-	private long startTime;
 	private long freezeTime;
 	private AtomicLong msgIdGenerator = new AtomicLong(1);
 
@@ -53,7 +52,6 @@ public class MqReader implements IRichSpout {
 		orders = new ConcurrentHashMap<>();
 		payments = new LinkedBlockingQueue<>();
 		waitingPayments = new ConcurrentHashMap<>();
-		startTime = System.currentTimeMillis();
 		freezeTime = System.currentTimeMillis() + 100;
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
@@ -176,17 +174,17 @@ public class MqReader implements IRichSpout {
 				}
 			} while (payment != null);
 		}
-		if (!hasEmited && System.currentTimeMillis() - startTime > 3 * 60 * 1000) {
+		if (!hasEmited){// && System.currentTimeMillis() - startTime > 3 * 60 * 1000) {
 			_collector.emit("flush", new Values());
-			// LOG.info("Send flush stream");
+			LOG.info("Send flush stream");
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		} else if (!hasEmited) {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

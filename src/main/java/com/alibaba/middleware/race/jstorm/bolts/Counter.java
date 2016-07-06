@@ -33,7 +33,7 @@ public class Counter implements IRichBolt {
 	private Map<Long, Double> PCcounters;
 	private Map<Long, Double> Mcounters;
 	private static Logger LOG = LoggerFactory.getLogger(Counter.class);
-	private long startTime;
+	private long freezeTime;
 	private boolean updateToDate = true;
 
 	@SuppressWarnings("rawtypes")
@@ -44,13 +44,12 @@ public class Counter implements IRichBolt {
 		TMcounters = new TreeMap<>();
 		PCcounters = new TreeMap<>();
 		Mcounters = new TreeMap<>();
-		startTime = System.currentTimeMillis();
+		freezeTime = System.currentTimeMillis() + 200;
 	}
 
 	@Override
 	public void execute(Tuple tuple) {
 		if ("flush".equals(tuple.getSourceStreamId())) {
-			// LOG.info("Got flush signal");
 			if (!updateToDate) {
 				flush();
 			}
@@ -101,15 +100,17 @@ public class Counter implements IRichBolt {
 				// LOG.info("Total mobile fee in " + time + ":" + sum);
 			}
 			updateToDate = false;
-			if (System.currentTimeMillis() - startTime > 16 * 60 * 1000) {
-				flush();
-			}
 		}
 
 		collector.ack(tuple);
 	}
 
 	public void flush() {
+		if(System.currentTimeMillis() < freezeTime){
+			return ;
+		}
+		freezeTime = System.currentTimeMillis() + 300;
+		LOG.info("flush");
 		// emit to save
 		Set<Long> minuteTimes = TBcounters.keySet();
 		List<Long> toBeDelete = new ArrayList<>();
