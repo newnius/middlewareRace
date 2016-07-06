@@ -31,7 +31,7 @@ public class RaceTopology {
 		int order_saver_Parallelism_hint = 3;
 		int order_getter_Parallelism_hint = 4;
 		int count_Parallelism_hint = 1;
-		int tair_write_Parallelism_hint = 2;
+		int tair_write_Parallelism_hint = 3;
 
 		TopologyBuilder builder = new TopologyBuilder();
 

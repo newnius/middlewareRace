@@ -90,8 +90,7 @@ public class MqReader implements IRichSpout {
 						// LOG.info("TBOrderId:" + order.getOrderId());
 						// LOG.info(order.toString());
 						orders.put(orderMessage.getOrderId(), true);
-						// LOG.info("after put, Total TBorders : " +
-						// TBOrders.size());
+						LOG.info("after put, Total orders : " + orders.size());
 
 						break;
 
@@ -106,8 +105,7 @@ public class MqReader implements IRichSpout {
 						// LOG.info("TMOrderId:" + order.getOrderId());
 						// LOG.info(order.toString());
 						orders.put(orderMessage.getOrderId(), false);
-						// LOG.info("after put, Total TMorders : " +
-						// TMOrders.size());
+						LOG.info("after put, Total orders : " + orders.size());
 
 						break;
 
@@ -123,8 +121,7 @@ public class MqReader implements IRichSpout {
 						// LOG.info(payment.toString());
 						try {
 							payments.put(payment);
-							// LOG.info("after put, Total payments : " +
-							// payments.size());
+							LOG.info("after put, Total payments : " + payments.size());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							LOG.error(e.getMessage());
@@ -148,7 +145,7 @@ public class MqReader implements IRichSpout {
 
 	@Override
 	public void nextTuple() {
-		// LOG.info("before get, Total orders : " + orders.size());
+		//LOG.info("before get, Total orders : " + orders.size());
 		boolean hasEmited = false;
 		Payment payment;
 
@@ -164,6 +161,7 @@ public class MqReader implements IRichSpout {
 							new Values(payment, orders.get(payment.getOrderId()) ? Order.TAOBAO : Order.TMALL,
 									RaceUtils.toMinuteTimestamp(payment.getCreateTime())),
 							"pay_" + msgId);
+					LOG.info("after emit, Total payments : " + payments.size());
 					hasEmited = true;
 				} else if (payment != null) {
 					try {
@@ -182,13 +180,14 @@ public class MqReader implements IRichSpout {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		} else if (!hasEmited) {
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+		} 
+//		else if (!hasEmited) {
+//			try {
+//				Thread.sleep(50);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//		}
 	}
 
 	@Override

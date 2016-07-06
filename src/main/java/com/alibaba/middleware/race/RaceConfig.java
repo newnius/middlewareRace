@@ -25,14 +25,14 @@ public class RaceConfig implements Serializable {
 	public static String TairSalveConfigServer = "10.101.72.128:5198";
 
 	// remote
-	 public static String TairConfigServer = "10.101.72.127:5198";
-	 public static String TairGroup = "group_tianchi";
-	 public static Integer TairNamespace = 16332;
-	 public static final String RocketMqAddr = "";
+//	 public static String TairConfigServer = "10.101.72.127:5198";
+//	 public static String TairGroup = "group_tianchi";
+//	 public static Integer TairNamespace = 16332;
+//	 public static final String RocketMqAddr = "";
 
 	// local test
-//	public static Integer TairNamespace = 0;
-//	public static final String RocketMqAddr = "192.168.56.104:9876";
-//	public static String TairGroup = "group_1";
-//	public static String TairConfigServer = "192.168.56.102:5198";
+	public static Integer TairNamespace = 0;
+	public static final String RocketMqAddr = "192.168.56.104:9876";
+	public static String TairGroup = "group_1";
+	public static String TairConfigServer = "192.168.56.102:5198";
 }

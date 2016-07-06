@@ -44,7 +44,7 @@ public class Counter implements IRichBolt {
 		TMcounters = new TreeMap<>();
 		PCcounters = new TreeMap<>();
 		Mcounters = new TreeMap<>();
-		freezeTime = System.currentTimeMillis() + 200;
+		freezeTime = System.currentTimeMillis() + 2000;
 	}
 
 	@Override
@@ -109,7 +109,7 @@ public class Counter implements IRichBolt {
 		if(System.currentTimeMillis() < freezeTime){
 			return ;
 		}
-		freezeTime = System.currentTimeMillis() + 300;
+		freezeTime = System.currentTimeMillis() + 2000;
 		LOG.info("flush");
 		// emit to save
 		Set<Long> minuteTimes = TBcounters.keySet();
