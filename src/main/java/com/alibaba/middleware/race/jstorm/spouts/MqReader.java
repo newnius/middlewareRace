@@ -45,6 +45,8 @@ public class MqReader implements IRichSpout {
 	private static Logger LOG = LoggerFactory.getLogger(MqReader.class);
 	private SpoutOutputCollector _collector;
 
+	private LinkedBlockingQueue<List<MessageExt>> msgExts;
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
@@ -55,6 +57,8 @@ public class MqReader implements IRichSpout {
 		freezeTime = System.currentTimeMillis() + 100;
 		consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+		msgExts = new LinkedBlockingQueue<>();
+
 		//
 		if (RaceConfig.RocketMqAddr.length() > 0)
 			consumer.setNamesrvAddr(RaceConfig.RocketMqAddr);
@@ -71,64 +75,10 @@ public class MqReader implements IRichSpout {
 
 			@Override
 			public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-				for (MessageExt msg : msgs) {
-
-					// LOG.info(msg.getTopic());
-					byte[] body = msg.getBody();
-					OrderMessage orderMessage;
-
-					switch (msg.getTopic()) {
-					case RaceConfig.MqTaobaoTradeTopic:
-
-						if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-							// Info: 生产者停止生成数据, 并不意味着马上结束
-							LOG.info("Got the end signal of TBOrderMessage");
-							continue;
-						}
-
-						orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-						// LOG.info("TBOrderId:" + order.getOrderId());
-						// LOG.info(order.toString());
-						orders.put(orderMessage.getOrderId(), true);
-						LOG.info("after put, Total orders : " + orders.size());
-
-						break;
-
-					case RaceConfig.MqTmallTradeTopic:
-						if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-							// Info: 生产者停止生成数据, 并不意味着马上结束
-							LOG.info("Got the end signal of TMOrderMessage");
-							continue;
-						}
-
-						orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-						// LOG.info("TMOrderId:" + order.getOrderId());
-						// LOG.info(order.toString());
-						orders.put(orderMessage.getOrderId(), false);
-						LOG.info("after put, Total orders : " + orders.size());
-
-						break;
-
-					case RaceConfig.MqPayTopic:
-						if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-							// Info: 生产者停止生成数据, 并不意味着马上结束
-							LOG.info("Got the end signal of payments");
-							continue;
-						}
-						PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
-						Payment payment = new Payment(paymentMessage);
-						// LOG.info("payment OrderId:" + payment.getOrderId());
-						// LOG.info(payment.toString());
-						try {
-							payments.put(payment);
-							LOG.info("after put, Total payments : " + payments.size());
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-							LOG.error(e.getMessage());
-						}
-						break;
-					}
-
+				try {
+					msgExts.put(msgs);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 				return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
 			}
@@ -143,9 +93,79 @@ public class MqReader implements IRichSpout {
 
 	}
 
+	public void parse(List<MessageExt> msgs) {
+		for (MessageExt msg : msgs) {
+
+			// LOG.info(msg.getTopic());
+			byte[] body = msg.getBody();
+			OrderMessage orderMessage;
+
+			switch (msg.getTopic()) {
+			case RaceConfig.MqTaobaoTradeTopic:
+
+				if (body.length == 2 && body[0] == 0 && body[1] == 0) {
+					// Info: 生产者停止生成数据, 并不意味着马上结束
+					LOG.info("Got the end signal of TBOrderMessage");
+					continue;
+				}
+
+				orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
+				// LOG.info("TBOrderId:" + order.getOrderId());
+				// LOG.info(order.toString());
+				orders.put(orderMessage.getOrderId(), true);
+				//LOG.info("after put, Total orders : " + orders.size());
+
+				break;
+
+			case RaceConfig.MqTmallTradeTopic:
+				if (body.length == 2 && body[0] == 0 && body[1] == 0) {
+					// Info: 生产者停止生成数据, 并不意味着马上结束
+					LOG.info("Got the end signal of TMOrderMessage");
+					continue;
+				}
+
+				orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
+				// LOG.info("TMOrderId:" + order.getOrderId());
+				// LOG.info(order.toString());
+				orders.put(orderMessage.getOrderId(), false);
+				//LOG.info("after put, Total orders : " + orders.size());
+
+				break;
+
+			case RaceConfig.MqPayTopic:
+				if (body.length == 2 && body[0] == 0 && body[1] == 0) {
+					// Info: 生产者停止生成数据, 并不意味着马上结束
+					LOG.info("Got the end signal of payments");
+					continue;
+				}
+				PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
+				Payment payment = new Payment(paymentMessage);
+				// LOG.info("payment OrderId:" + payment.getOrderId());
+				// LOG.info(payment.toString());
+				try {
+					payments.put(payment);
+					//LOG.info("after put, Total payments : " + payments.size());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					LOG.error(e.getMessage());
+				}
+				break;
+			}
+		}
+	}
+
 	@Override
 	public void nextTuple() {
-		//LOG.info("before get, Total orders : " + orders.size());
+		List<MessageExt> msgs;
+		//parse first
+		do {
+			msgs = msgExts.poll();
+			if (msgs != null) {
+				parse(msgs);
+			}
+		} while (msgs != null);
+		
+		// LOG.info("before get, Total orders : " + orders.size());
 		boolean hasEmited = false;
 		Payment payment;
 
@@ -172,22 +192,23 @@ public class MqReader implements IRichSpout {
 				}
 			} while (payment != null);
 		}
-		if (!hasEmited){// && System.currentTimeMillis() - startTime > 3 * 60 * 1000) {
+		if (!hasEmited) {// && System.currentTimeMillis() - startTime > 3 * 60 *
+							// 1000) {
 			_collector.emit("flush", new Values());
-			LOG.info("Send flush stream");
+			//LOG.info("Send flush stream");
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		} 
-//		else if (!hasEmited) {
-//			try {
-//				Thread.sleep(50);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//		}
+		}
+		// else if (!hasEmited) {
+		// try {
+		// Thread.sleep(50);
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
+		// }
 	}
 
 	@Override
